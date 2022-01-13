@@ -122,8 +122,52 @@ List of Metrics
     * bot clustering v
 * m3 : 
     * link component number of nodes
-    *  link component number of links
-
-
-
-    
+    * link component number of links
+    * number of components in graph
+    * size of largest component
+    * eccentricity of u in G
+    * eccentricity of v in G
+    * eccentricity of u in G-
+    * eccentricity of v in G-
+    * total distance change u
+    * total distance change v
+    * max distance change u
+    * max distance change v
+    * number distance change u
+    * number distance change v
+    * sum difference of distances to u and v in G
+    * sum difference of distances to u and v in G-
+    * closeness of u in G
+    * closeness of v in G
+    * closeness of u in G-
+    * closeness of v in G-
+    * distance u v in G-
+    * degeneracy G
+    * degeneracy G-
+    * sum core scores G
+    * sum core scores G-
+    * core number u in G
+    * core number v in G
+    * core number u in G-
+    * core number v in G-
+    * sum core variations
+    * number of components in G-
+    * size largest component G-
+    * pagerank of u in G
+    * pagerank of v in G
+    * pagerank of u in G-
+    * pagerank of v in G-
+    * pagerank max in G
+    * pagerank max in G-
+    * pagerank variation
+    * number of subsets in G-
+    * max subset size in G-
+    * u subset size in G-
+    * v subset size in G-
+    * u v in same community in G-
+    * number of subsets in G
+    * max subset size in G
+    * u subset size in G
+    * v subset size in G
+    * u v in same community in G
+    * number of nodes changing partition
