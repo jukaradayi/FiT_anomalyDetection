@@ -3,9 +3,34 @@ FiT anomaly detection
 ---------------------
 
 Description
------------
+===========
 
 Given a link stream in input, aggregate the stream into different graph sizes and compute features for each interaction.
+
+Installation
+============
+
+Requirements
+------------
+
+You need a g++ compilator compatible with C++14
+
+NetworKit installation
+----------------------
+
+First you need to install networkit as a library :
+
+```
+mkdir </PATH/TO/NETWORKIT/LIB/> # choose a directory where you will install networkit library
+git clone --recursive https://github.com/networkit/networkit.git
+cd networkit
+mkdir build && cd build
+
+cmake -DCMAKE_INSTALL_PREFIX:PATH=</PATH/TO/NETWORKIT/LIB/> ..
+make -j5 && make install
+```
+An error might occur where `ttmath` headers are not copied in the library. You need to check if `</PATH/TO/NETWORKIT/LIB/>/include/ttmath/` is empty.
+If it is empty, copy the content of `networkit/extlibs/ttmath/ttmath/` into `</PATH/TO/NETWORKIT/LIB/>/include/ttmath/`
 
 Usage
 -----
@@ -33,30 +58,6 @@ Optional parameters [see below for list of metrics toggled by m1, m2 and m3):
 -p : when enabled, compute projection graph, and output metrics on them
 
 -b : enable when the input graph is bipartite
-
-Requirement and Installation
-----------------------------
-
-The only requirement is to build networkit (any version, should work with the latest) as a library.
-
-- A modern C++ compiler (g++ >= 4.8) compatible with c++11
-- OpenMP (usually ships with the compiler)
-
-To build networkit : 
-
-```
-mkdir build
-cd build
-cmake ..
-make -jX install
-```
-
-Then to build the project: 
-
-```
-g++ -L<PATH_TO_NETWORKIT>/lib -I<PATH_TO_NETWORKIT>/include -lnetworkit -std=c++11 -fopenmp main.cpp metrics.cpp G_graph.cpp history_graph.cpp H_graph.cpp PLM.cpp
-
-```
 
 List of Metrics
 ---------------
