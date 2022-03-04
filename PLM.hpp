@@ -42,14 +42,14 @@ public:
      *
      * @return String representation of this algorithm.
      */
-    std::string toString() const override;
+    std::string toString() const;
 
     /**
      * Detect communities.
      */
     //static std::pair<std::vector<Partition>, std::vector<count>> parallelRun(const Graph& projection, const std::vector<std::vector<index>> vectors);
 
-    void run() override;
+    void run();
 
     static std::pair<Graph, std::vector<node>> coarsen(const Graph& G, const Partition& zeta);
 

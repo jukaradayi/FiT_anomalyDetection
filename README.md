@@ -32,6 +32,19 @@ make -j5 && make install
 An error might occur where `ttmath` headers are not copied in the library. You need to check if `</PATH/TO/NETWORKIT/LIB/>/include/ttmath/` is empty.
 If it is empty, copy the content of `networkit/extlibs/ttmath/ttmath/` into `</PATH/TO/NETWORKIT/LIB/>/include/ttmath/`
 
+Project compilation
+-------------------
+
+When NetworKit is installed, you can compile the project:
+
+g++ main.cpp G_graph.cpp history_graph.cpp H_graph.cpp PLM.cpp metrics.cpp -L</PATH/TO/NETWORKIT/LIB/>/lib -I</PATH/TO/NETWORKIT/LIB/>/include -lnetworkit -std=c++14 -fopenmp -O3
+
+Then 
+
+```
+export LD_LIBRARY_PATH=</PATH/TO/NETWORKIT/LIB/>/lib
+```
+
 Usage
 -----
 
