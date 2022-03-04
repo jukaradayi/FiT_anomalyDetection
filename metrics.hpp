@@ -36,13 +36,15 @@ class Metrics final {
     // constructor & destructor
 
 public:
-    Metrics(HistoryGraph& history, bool use_basic, bool use_local, bool use_global, bool use_nonLinear); 
+    Metrics(HistoryGraph& history, const bool use_basic, const bool use_local, const bool use_global, const bool use_nonLinear); 
+
+    void BiFS(const Graph &G, node source, bool storePaths); 
 
     void init();
 
     ~Metrics();
 
-    void run(node u, node v); // run function stored in function-vectors
+    std::string run(const node u, const node v, const int interaction_id); // run function stored in function-vectors
 
     inline Count degree(node u){node u_main = history.node2main[u]; return history.main_graph.degree(u_main);};
 
@@ -93,25 +95,28 @@ public:
     inline Count degree_absolute_difference(node u, node v){
         node u_main = history.node2main[u];
         node v_main = history.node2main[v];
-        return std::abs(history.main_graph.degree(u_main) - history.main_graph.degree(v_main));
+        return std::abs(static_cast<int>(history.main_graph.degree(u_main) - history.main_graph.degree(v_main)));
     };
 
     inline Count weighted_degree_absolute_difference(node u, node v){
         node u_main = history.node2main[u];
         node v_main = history.node2main[v];
-        return std::abs(history.main_graph.weightedDegree(u_main) - history.main_graph.weightedDegree(v_main));
+        return std::abs(static_cast<int>(history.main_graph.weightedDegree(u_main) - history.main_graph.weightedDegree(v_main)));
     };
 
     //double average_weight();
     Count total_weight(){
-        Count total_weight = 0;
-        for(std::map<Edge,Count>::iterator it = history.counter.begin(); it != history.counter.end(); ++it){
-            //Key k =  iter->first;
-            Count v = it->second;
-            total_weight += v;
-        }
-        return total_weight;
+        //Count total_weight = 0;
+        //for(std::map<Edge,Count>::iterator it = history.counter.begin(); it != history.counter.end(); ++it){
+        //    //Key k =  iter->first;
+        //    Count v = it->second;
+        //    total_weight += v;
+        //}
+        //return total_weight;
+        return history.getTotalWeight();
     };
+
+    std::pair<double, double> localClustering(const NetworKit::Graph& G, const node u, const node v);
     //double weight_concentration();
     //double difference_to_average_weight();
     //double weight_relative_u();

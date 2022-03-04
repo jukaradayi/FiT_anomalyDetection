@@ -6,11 +6,12 @@
 #include "history_graph.hpp"
 #include "G_graph.hpp"
 #include <networkit/graph/Graph.hpp>
+#include <iostream>
 
 namespace StreamGraphs {
 using namespace StreamGraphs;
 /** constructors **/
-GGraph::GGraph(bool use_projection, bool use_unpacked, Bound main_bound, Bound proj_bound, Count N, Bound window) : HistoryGraph( use_projection, use_unpacked, main_bound, proj_bound, N), window(window) {}
+GGraph::GGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, bool use_projection, bool use_unpacked, bool is_bipartite, Bound main_bound, Bound proj_bound, Count N, Bound window) : HistoryGraph(main_graph, top_graph, bot_graph,  use_projection, use_unpacked, is_bipartite, main_bound, proj_bound, N), window(window) {}
 
 GGraph::~GGraph() {}
 
@@ -31,9 +32,11 @@ void GGraph::trimQueue(Time t) {
         main_degree_distribution[v_degree] -= 1;
 
     };
+
     while (t - queue.front().t > window) {
+        // TODO change to .back()
         Interaction i0 = queue.front();
-        queue.erase(queue.begin()); 
+        queue.pop();
 
         node u0_main = node2main[i0.u];
         node v0_main = node2main[i0.v];
@@ -43,6 +46,7 @@ void GGraph::trimQueue(Time t) {
         --counter[e0];
 
         main_graph.setWeight(u0_main, v0_main, counter[e0]);
+        decreaseTotalWeight();
         main_weightedDegree_sequence[i0.u] -= 1;
         main_weightedDegree_sequence[i0.v] -= 1;
 
@@ -53,9 +57,15 @@ void GGraph::trimQueue(Time t) {
             if (use_projection) {
 
                 node u0_top = node2top[i0.u];
-                node v0_bot = node2bot[i0.v];
+                node v0_bot = (is_bipartite) ? node2bot[i0.v] : node2top[i0.v];
+                //if (is_bipartite) v0_bot = node2bot[i0.v];
                 removeEdgeProjection(top_graph, v0_main, u0_top, true);
-                removeEdgeProjection(bot_graph, u0_main, v0_bot, false);
+                if (is_bipartite) {
+                    removeEdgeProjection(bot_graph, u0_main, v0_bot, false);
+                } else {
+                    removeEdgeProjection(top_graph, u0_main, v0_bot, false);
+                }
+
             }
 
             main_graph.removeEdge(u0_main, v0_main);

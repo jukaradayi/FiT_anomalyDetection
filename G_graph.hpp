@@ -30,7 +30,7 @@ class GGraph final : public HistoryGraph {
     // constructor & destructor
 
 public:
-    GGraph(bool use_projection, bool use_unpacked, Bound main_bound, Bound proj_bound, Count N, Bound window); 
+    GGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, bool use_projection, bool use_unpacked, bool is_bipartite, Bound main_bound, Bound proj_bound, Count N, Bound window); 
 
 
     ~GGraph();

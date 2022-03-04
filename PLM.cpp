@@ -25,6 +25,7 @@ PLM::PLM(const Graph& G, bool refine, double gamma, std::string par, count maxIt
 PLM::PLM(const Graph& G, const PLM& other) : CommunityDetectionAlgorithm(G), parallelism(other.parallelism), refine(other.refine), gamma(other.gamma), maxIter(other.maxIter), turbo(other.turbo), recurse(other.recurse), zeta(other.zeta) {}
 
 void PLM::run() {
+    Aux::Log::setLogLevel("QUIET");
     Aux::SignalHandler handler;
 
     count z = G->upperNodeIdBound();

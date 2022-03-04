@@ -30,7 +30,7 @@ class HGraph final : public HistoryGraph {
     // constructor & destructor
 
 public:
-    HGraph(bool use_projection, bool use_unpacked, Bound main_bound, Bound proj_bound, Count N, Bound window); 
+    HGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N, const Bound window); 
 
 
     ~HGraph();
