@@ -51,10 +51,17 @@ public:
     //Count degree_v();
     inline Count top_degree(node u){node u_top = history.node2top[u];  return history.top_graph.degree(u_top);};
     inline Count bot_degree(node v){node v_bot = history.node2bot[v]; return history.bot_graph.degree(v_bot);};
-    inline Count weighted_degree(node u){node u_main = history.node2main[u]; return history.main_graph.weightedDegree(u_main);};
-    inline Count top_weighted_degree(node u){node u_top = history.node2top[u]; return history.top_graph.weightedDegree(u_top);};
 
-    inline Count bot_weighted_degree(node v){node v_bot = history.node2bot[v]; return history.bot_graph.weightedDegree(v_bot);};
+    inline Count weighted_degree(node u){node u_main = history.node2main[u]; return history.main_weightedDegree_sequence[u_main];};
+    inline Count top_weighted_degree(node u){node u_top = history.node2top[u]; return history.top_weightedDegree_sequence[u_top];};
+
+    inline Count bot_weighted_degree(node v){node v_bot = history.node2bot[v]; return history.bot_weightedDegree_sequence[v_bot];};
+
+
+    //inline Count weighted_degree(node u){node u_main = history.node2main[u]; return history.main_graph.weightedDegree(u_main);};
+    //inline Count top_weighted_degree(node u){node u_top = history.node2top[u]; return history.top_graph.weightedDegree(u_top);};
+
+    //inline Count bot_weighted_degree(node v){node v_bot = history.node2bot[v]; return history.bot_graph.weightedDegree(v_bot);};
 
     inline Count max_degree(){
         Count max_degree = 0;

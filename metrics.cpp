@@ -87,16 +87,19 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
     }
 
 
-    //G.balancedParallelForNodes([&](node u) {
-    auto computeClustering = [&](node u) {
+    G.balancedParallelForNodes([&](node u_node) {
+    //auto computeClustering = [&](node u) {
     //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_main, history.main_bound).begin();
     //    bN != BoundedNeighborRange(history.main_graph, u_main, history.main_bound).end(); ++bN) {
     //    node n = *bN;
-        count d = G.degree(u);
+        if (u_node != u || u_node != v) {
+            return;
+        }
+        count d = G.degree(u_node);
 
         if (d < 2) {
 
-            scoreData[u] = 0.0;
+            scoreData[u_node] = 0.0;
 
         } else {
 
@@ -105,8 +108,8 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
 
             //G.forEdgesOf(n, [&](node v) {
 
-        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u, history.main_bound).begin();
-            bN != BoundedNeighborRange(history.main_graph, u, history.main_bound).end(); ++bN) {
+        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
+            bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
                 node n = *bN;
 
                 nodeMarker[tid][n] = true;
@@ -114,8 +117,8 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
 
             //G.forEdgesOf(u, [&](node, node v) {
 
-        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u, history.main_bound).begin();
-            bN != BoundedNeighborRange(history.main_graph, u, history.main_bound).end(); ++bN) {
+        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
+            bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
                 node n = *bN;
  
                 //if (turbo) {
@@ -138,21 +141,28 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
             }
 
             //G.forEdgesOf(u, [&](node, node v) {
-            for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u, history.main_bound).begin();
-                bN != BoundedNeighborRange(history.main_graph, u, history.main_bound).end(); ++bN) {
+            for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
+                bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
                     node n = *bN;
                     nodeMarker[tid][n] = false;
             }
 
-            scoreData[u] = (double) triangles / (double)(d * (d - 1)); // No division by 2 since triangles are counted twice as well!
+            scoreData[u_node] = (double) triangles / (double)(d * (d - 1)); // No division by 2 since triangles are counted twice as well!
             //if (turbo) 
-            scoreData[u] *= 2; // in turbo mode, we count each triangle only once
+            scoreData[u_node] *= 2; // in turbo mode, we count each triangle only once
 
         }
 
-    };//);
-    computeClustering(u);
-    computeClustering(v);
+    });
+    //computeClustering(u);
+    //std::cout << "compute u" << scoreData[u] << " \n";
+
+
+    //computeClustering(v);
+    //std::cout << "compute v " << scoreData[v] << " \n";
+
+    //std::cout << "make pair \n";
+
     std::pair<double, double> res = std::make_pair(scoreData[u], scoreData[v]);
     //hasRun = true;
 
@@ -193,12 +203,14 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         integerResults["degree u"] = degree(u);
         integerResults["degree v"] = degree(v);
 
+        // TODO En O(degré(u))
         integerResults["weighted degree u"] = weighted_degree(u);
         integerResults["weighted degree v"] = weighted_degree(v);
 
-        integerResults["max degree"] = max_degree();
+        // TODO en O(n) - devrait se changer facilement
+        //integerResults["max degree"] = max_degree();
 
-        integerResults["max weighted degree"] = max_weighted_degree();
+        //integerResults["max weighted degree"] = max_weighted_degree();
 
         integerResults["degree absolute difference"] = degree_absolute_difference(u, v);
 
@@ -245,8 +257,8 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
                 integerResults["top weighted degree"] = top_weighted_degree(v);
             }
 
-            integerResults["top max weighted degree"] = top_max_weighted_degree();
-            if (history.is_bipartite) integerResults["bot max weighted degree"] = bot_max_weighted_degree();
+            //integerResults["top max weighted degree"] = top_max_weighted_degree();
+            //if (history.is_bipartite) integerResults["bot max weighted degree"] = bot_max_weighted_degree();
         }
     };
     
@@ -377,10 +389,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
 
         //LocalClusteringCoefficient clustering(history.main_graph, true);
         std::pair<double, double> clustering = localClustering(history.main_graph, u_main, v_main);
-
         doubleResults["clustering u"] = clustering.first;
-        doubleResults["clustering v"] = clustering.second;
 
+        doubleResults["clustering v"] = clustering.second;
         //clustering.run();
 
         //doubleResults["clustering u"] = clustering.score(u_main);
