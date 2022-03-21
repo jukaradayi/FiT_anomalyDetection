@@ -201,8 +201,8 @@ void PLM::run() {
                 G->forNodes(tryMove);
             } else if (this->parallelism == "simple") {
                 G->parallelForNodes(tryMove);
-            } else if (this->parallelism == "randomized") {
-                G->parallelForNodesInRandomOrder(tryMove);
+            //} else if (this->parallelism == "randomized") {
+            //    G->parallelForNodesInRandomOrder(tryMove);
             } else if (this->parallelism == "balanced") {
                 G->balancedParallelForNodes(tryMove);
             } else if (this->parallelism == "none randomized") {
