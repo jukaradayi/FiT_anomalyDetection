@@ -16,6 +16,8 @@
 #include <limits>
 #include <utility>
 #include <cstdint>
+#include <cassert>
+#include "hash_graph.hpp"
 
 using namespace NetworKit;
 
@@ -88,13 +90,16 @@ inline void us_isect(std::unordered_set<node> &out,
 /* Bounded neighbor iterator */
 /*****************************/
 class BoundedNeighborIterator {
-    const NetworKit::Graph *G;
+    const HashGraph *G;
     const Bound bound = 0;
 
 
     //std::vector<node>::const_iterator nIter;
-    NetworKit::Graph::NeighborIterator nIter;
-    NetworKit::Graph::NeighborIterator end;
+    //NetworKit::Graph::NeighborIterator nIter;
+    //NetworKit::Graph::NeighborIterator end;
+
+    HashGraph::NeighborIterator nIter;
+    HashGraph::NeighborIterator end;
 
 public:
     // The value type of the neighbors (i.e. nodes). Returned by
@@ -118,7 +123,8 @@ public:
     using self = BoundedNeighborIterator;
 
     //BoundedNeighborIterator(std::vector<node>::const_iterator nodesIter, Bound bound) : nIter(nodesIter), bound(bound) {}
-    BoundedNeighborIterator(const NetworKit::Graph &G, NetworKit::Graph::NeighborIterator neighborsIter, Bound bound, NetworKit::Graph::NeighborIterator end) : G(&G), nIter(neighborsIter), bound(bound), end(end) {}
+    //BoundedNeighborIterator(const NetworKit::Graph &G, NetworKit::Graph::NeighborIterator neighborsIter, Bound bound, NetworKit::Graph::NeighborIterator end) : G(&G), nIter(neighborsIter), bound(bound), end(end) {}
+    BoundedNeighborIterator(const HashGraph &G, HashGraph::NeighborIterator neighborsIter, Bound bound, HashGraph::NeighborIterator end) : G(&G), nIter(neighborsIter), bound(bound), end(end) {}
 
     
 
@@ -183,12 +189,13 @@ public:
 };
 
 class BoundedNeighborRange {
-    const NetworKit::Graph *G;
+    //const NetworKit::Graph *G;
+    const HashGraph *G;
     const Bound bound = 0;
     node u;
 
 public:
-    BoundedNeighborRange(const Graph &G, node u, Bound bound) : G(&G), u(u), bound(bound) { assert(G.hasNode(u)); };
+    BoundedNeighborRange(const HashGraph &G, node u, Bound bound) : G(&G), u(u), bound(bound) { assert(G.hasNode(u)); };
 
     BoundedNeighborRange() : G(nullptr){};
 
@@ -209,6 +216,40 @@ public:
     }
 };
 
+
+}
+namespace std{
+
+    template <>
+    struct hash<std::pair<uint64_t, uint64_t>>
+    {
+        std::size_t operator()(const std::pair<node, node>& k) const
+        {
+            using std::size_t;
+            using std::hash;
+
+            // Compute individual hash values for first,
+            // second and third and combine them using XOR
+            // and bit shifting:
+
+            return hash<uint64_t>()(k.first) ^ hash<uint64_t>()(k.second) ;
+        }
+    };
+    template <>
+    struct hash<StreamGraphs::Edge>
+    {
+        std::size_t operator()(const StreamGraphs::Edge& k) const
+        {
+            using std::size_t;
+            using std::hash;
+
+            // Compute individual hash values for first,
+            // second and third and combine them using XOR
+            // and bit shifting:
+
+            return hash<uint64_t>()(k.u) ^ hash<uint64_t>()(k.v) ;
+        }
+    };
 
 }
 

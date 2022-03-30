@@ -12,7 +12,7 @@ namespace StreamGraphs {
 // TODO TODO si pas bipartite, bot = top* ? 
 
 /** constructors **/
-HistoryGraph::HistoryGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N) : 
+HistoryGraph::HistoryGraph(HashGraph& main_graph, HashGraph& top_graph, HashGraph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N) :
     main_graph(main_graph),
     top_graph(top_graph),
     bot_graph(bot_graph),
@@ -203,7 +203,7 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
     };
 
     // iterate over bounded neighbors to add nodes 
-    for (BoundedNeighborIterator bN = BoundedNeighborRange(main_graph, node_main, proj_bound).begin(); 
+    for (BoundedNeighborIterator bN = BoundedNeighborRange(main_graph, node_main, proj_bound).begin();
             bN != BoundedNeighborRange(main_graph, node_main, proj_bound).end(); ++bN) {
     //for (NetworKit::Graph::NeighborIterator N_it = main_graph.neighborRange(node_main).begin();
     //        N_it != main_graph.neighborRange(node_main).end(); ++N_it) {
@@ -243,7 +243,7 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
 
 };
 
-void HistoryGraph::removeEdgeProjection(NetworKit::Graph& proj_graph,const node node_main, const node proj_node, const bool is_top) {
+void HistoryGraph::removeEdgeProjection(HashGraph& proj_graph,const node node_main, const node proj_node, const bool is_top) {
     auto decreaseTopDegree = [&](node u, node v) {
         // to be called ~AFTER~ decreasing edge weight
         Count u_degree = top_graph.degree(u);
@@ -280,7 +280,8 @@ void HistoryGraph::removeEdgeProjection(NetworKit::Graph& proj_graph,const node 
         //for (BoundedNeighborIterator bN = BoundedNeighborRange(main_graph, node_main, proj_bound).begin();
         //        bN != BoundedNeighborRange(main_graph, node_main, proj_bound).end(); ++bN) {
         //node n = main2node[*bN];
-        for (NetworKit::Graph::NeighborIterator N_it = main_graph.neighborRange(node_main).begin();
+        //for (NetworKit::Graph::NeighborIterator N_it = main_graph.neighborRange(node_main).begin();
+        for (HashGraph::NeighborIterator N_it = main_graph.neighborRange(node_main).begin();
                 N_it != main_graph.neighborRange(node_main).end(); ++N_it) {
             node n = main2node[*N_it];
             

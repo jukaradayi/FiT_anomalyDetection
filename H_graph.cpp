@@ -11,7 +11,8 @@
 namespace StreamGraphs {
 using namespace StreamGraphs;
 /** constructors **/
-HGraph::HGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N, const Bound window) : HistoryGraph(main_graph, top_graph, bot_graph, use_projection, use_unpacked, is_bipartite, main_bound, proj_bound, N), window(window) {}
+//HGraph::HGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N, const Bound window) : HistoryGraph(main_graph, top_graph, bot_graph, use_projection, use_unpacked, is_bipartite, main_bound, proj_bound, N), window(window) {}
+HGraph::HGraph(HashGraph& main_graph, HashGraph& top_graph, HashGraph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N, const Bound window) : HistoryGraph(main_graph, top_graph, bot_graph, use_projection, use_unpacked, is_bipartite, main_bound, proj_bound, N), window(window) {}
 
 HGraph::~HGraph() {}
 
