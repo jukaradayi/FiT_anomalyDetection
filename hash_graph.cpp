@@ -40,7 +40,7 @@ namespace StreamGraphs {
     HashGraph::~HashGraph(){}
 
     // number of nodes
-    Count HashGraph::degree(node u){
+    Count HashGraph::degree(node u) const{
         return HashGraph::Neighbors.at(u).size();
     }
 
@@ -98,7 +98,7 @@ namespace StreamGraphs {
         return N_nodes;
     }
 
-    HashGraph::NeighborRange HashGraph::neighborRange(node u){
+    HashGraph::NeighborRange HashGraph::neighborRange(node u)const {
         assert(exists[u]);
         return  NeighborRange(*this, u);
     }

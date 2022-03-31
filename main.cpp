@@ -6,7 +6,7 @@
 #include "history_graph.hpp"
 #include "G_graph.hpp"
 #include "H_graph.hpp"
-#include "metrics.hpp"
+//#include "metrics.hpp"
 
 #include <omp.h>
 #include <networkit/graph/Graph.hpp>
@@ -196,9 +196,10 @@ int main(int argc, char* argv[]) {
     const std::string &filename = input.getCmdOption("-f");
     const std::string &output_folder = input.getCmdOption("-o");
     const Count limit = std::stoi(input.getCmdOption("-k"));
-    const bool metrics1 = input.cmdOptionExists("-m1");
-    const bool metrics2 = input.cmdOptionExists("-m2");
-    const bool metrics3 = input.cmdOptionExists("-m3");
+    //premier test pour hasmap ne utilise pas le metrics
+    //const bool metrics1 = input.cmdOptionExists("-m1");
+    //const bool metrics2 = input.cmdOptionExists("-m2");
+    //const bool metrics3 = input.cmdOptionExists("-m3");
     //const bool metrics4 = input.cmdOptionExists("-m4");
     const bool use_proj = input.cmdOptionExists("-p");
     const bool is_bip = input.cmdOptionExists("-b");
@@ -232,12 +233,12 @@ int main(int argc, char* argv[]) {
     for (int graph_idx = 0; graph_idx < hist_sizes.size(); ++graph_idx) {
         std::string graph_type = (graph_idx < G_index) ? "H" : "G";
 
-        // init NK graphs
-        NetworKit::Graph main_graph(0, true, false);
-        NetworKit::Graph top_graph(0, true, false);
-        NetworKit::Graph bot_graph;
+        // init hash graphs
+        HashGraph main_graph(0, true, false);
+        HashGraph top_graph(0, true, false);
+        HashGraph bot_graph(0, true, false);;
         if (is_bip) {
-            bot_graph = NetworKit::Graph(0, true, false);
+            bot_graph = HashGraph(0, true, false);
         } else {
             bot_graph = top_graph;
         }
@@ -250,7 +251,7 @@ int main(int argc, char* argv[]) {
             hist_graph = new GGraph(main_graph, top_graph, bot_graph, use_proj, false, is_bip, limit, limit, node_set.size(), hist_sizes[graph_idx]);
         }
 
-        Metrics metrics(*hist_graph, metrics1, metrics2, metrics3, false);
+        //Metrics metrics(*hist_graph, metrics1, metrics2, metrics3, false);
 
         std::ifstream file(filename);
 
@@ -291,12 +292,14 @@ int main(int argc, char* argv[]) {
 
             // start metrics at line 500 // TODO start metrics at window size
             std::clock_t t1_metric = std::clock(); // start clock
+            /*
             if (line_number > 499 && (metrics1 || metrics2 || metrics3) )
             {
                 output += metrics.run(i.u, i.v, line_number);
                 myoutput << output << std::flush;
                 output = "";
             }
+             */
             std::clock_t t2_metric = std::clock(); // end clock
             dur_metric += (t2_metric - t1_metric) / (double)CLOCKS_PER_SEC; // time in seconds
             dur_metric_whole += (t2_metric - t1_metric) / (double)CLOCKS_PER_SEC;

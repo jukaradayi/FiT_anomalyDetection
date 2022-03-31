@@ -207,8 +207,8 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
     };
 
     // iterate over bounded neighbors to add nodes 
-    for (BoundedNeighborIterator bN = BoundedNeighborRange(main_graph, node_main, proj_bound).begin();
-            bN != BoundedNeighborRange(main_graph, node_main, proj_bound).end(); ++bN) {
+    for (HashGraph::BoundedNeighborIterator bN = HashGraph::BoundedNeighborRange(main_graph, node_main, proj_bound).begin();
+            bN != HashGraph::BoundedNeighborRange(main_graph, node_main, proj_bound).end(); ++bN) {
     //for (NetworKit::Graph::NeighborIterator N_it = main_graph.neighborRange(node_main).begin();
     //        N_it != main_graph.neighborRange(node_main).end(); ++N_it) {
 
@@ -249,13 +249,9 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
 
 };
 
-<<<<<<< HEAD
+
 void HistoryGraph::removeEdgeProjection(HashGraph& proj_graph,const node node_main, const node proj_node, const bool is_top) {
-    auto decreaseTopDegree = [&](node u, node v) {
-=======
-void HistoryGraph::removeEdgeProjection(NetworKit::Graph& proj_graph,const node node_main, const node proj_node, const bool is_top) {
     auto decreaseTopDegree = [&](node u, node v, uint64_t weight) {
->>>>>>> 6c513cf8e66136f702b6ffbf90c6233e40933011
         // to be called ~AFTER~ decreasing edge weight
         Count u_degree = top_graph.degree(u);
         Count v_degree = top_graph.degree(v);
