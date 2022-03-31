@@ -164,42 +164,46 @@ void HistoryGraph::removeNode(const node _u, const bool is_top) {
 }
 
 void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,const bool is_top) {
-    auto increaseTopDegree = [&](node u, node v) {
+    auto increaseTopDegree = [&](node u, node v, int64_t top_weight) {
         // to be called ~AFTER~ increasing edge weight
         //
         Count u_degree = top_graph.degree(u);
         Count v_degree = top_graph.degree(v);
+        if (top_weight == 1) {
+            top_degree_distribution[u_degree -1] += 1;
+            top_degree_distribution[v_degree -1] += 1;
+            if (u_degree > 1) {
+                top_degree_distribution[u_degree -2] -= 1;
+            }
+            if (v_degree > 1) {
+                top_degree_distribution[v_degree -2] -= 1;
+            }
+        }
 
-        top_degree_distribution[u_degree -1] += 1;
-        top_degree_distribution[v_degree -1] += 1;
         top_weightedDegree_sequence[top2node[u]] += 1;
         top_weightedDegree_sequence[top2node[v]] += 1;
 
 
-        if (u_degree > 1) {
-            top_degree_distribution[u_degree -2] -= 1;
-        }
-        if (v_degree > 1) {
-            top_degree_distribution[v_degree -2] -= 1;
-        }
     };
-    auto increaseBotDegree = [&](node u, node v) {
+    auto increaseBotDegree = [&](node u, node v, int64_t bot_weight) {
 
         // to be called ~AFTER~ increasing edge weight
         Count u_degree = bot_graph.degree(u);
         Count v_degree = bot_graph.degree(v);
 
-        bot_degree_distribution[u_degree -1] += 1;
-        bot_degree_distribution[v_degree -1] += 1;
+        if (bot_weight == 1) {
+            bot_degree_distribution[u_degree -1] += 1;
+            bot_degree_distribution[v_degree -1] += 1;
+            if (u_degree > 1) {
+                bot_degree_distribution[u_degree -2] -= 1;
+            }
+            if (v_degree > 1) {
+                bot_degree_distribution[v_degree -2] -= 1;
+            }
+        }
         bot_weightedDegree_sequence[bot2node[u]] += 1;
         bot_weightedDegree_sequence[bot2node[v]] += 1;
 
-        if (u_degree > 1) {
-            bot_degree_distribution[u_degree -2] -= 1;
-        }
-        if (v_degree > 1) {
-            bot_degree_distribution[v_degree -2] -= 1;
-        }
     };
 
     // iterate over bounded neighbors to add nodes 
@@ -233,46 +237,62 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
         if (is_top || (!is_top && !is_bipartite)) {
             // redundancy_top = (top_proj.hasEdge(proj_node, n_proj)) ? redundancy_top : redundancy_top + 1;
             top_graph.increaseWeight(proj_node, n_proj, 1); 
-            increaseTopDegree(proj_node, n_proj);
+            Count w = top_graph.weight(proj_node, n_proj);
+            increaseTopDegree(proj_node, n_proj, w);
         } else if (!is_top && is_bipartite){
             bot_graph.increaseWeight(proj_node, n_proj, 1); 
-            increaseBotDegree(proj_node, n_proj);
+            Count w = bot_graph.weight(proj_node, n_proj);
+            increaseBotDegree(proj_node, n_proj, w);
         }
 
     }
 
 };
 
+<<<<<<< HEAD
 void HistoryGraph::removeEdgeProjection(HashGraph& proj_graph,const node node_main, const node proj_node, const bool is_top) {
     auto decreaseTopDegree = [&](node u, node v) {
+=======
+void HistoryGraph::removeEdgeProjection(NetworKit::Graph& proj_graph,const node node_main, const node proj_node, const bool is_top) {
+    auto decreaseTopDegree = [&](node u, node v, uint64_t weight) {
+>>>>>>> 6c513cf8e66136f702b6ffbf90c6233e40933011
         // to be called ~AFTER~ decreasing edge weight
         Count u_degree = top_graph.degree(u);
         Count v_degree = top_graph.degree(v);
 
-        if (u_degree > 0) {
-            top_degree_distribution[u_degree -1] += 1;
+        if (weight == 1) {
+            if (u_degree > 0) {
+                top_degree_distribution[u_degree -1] += 1;
+            }
+            if (v_degree > 0) {
+                top_degree_distribution[v_degree -1] += 1;
+            }
+            top_degree_distribution[u_degree] -= 1;
+            top_degree_distribution[v_degree] -= 1;
         }
-        if (v_degree > 0) {
-            top_degree_distribution[v_degree -1] += 1;
-        }
-        top_degree_distribution[u_degree] -= 1;
-        top_degree_distribution[v_degree] -= 1;
+        top_weightedDegree_sequence[u] -= 1;
+        top_weightedDegree_sequence[v] -= 1;
+
 
     };
-    auto decreaseBotDegree = [&](node u, node v) {
+    auto decreaseBotDegree = [&](node u, node v, uint64_t weight) {
 
         // to be called ~AFTER~ decreasing edge weight
         Count u_degree = bot_graph.degree(u);
         Count v_degree = bot_graph.degree(v);
-
-        if (u_degree > 0) {
-            bot_degree_distribution[u_degree -1] += 1;
+        
+        if (weight == 1) {
+            if (u_degree > 0) {
+                bot_degree_distribution[u_degree -1] += 1;
+            }
+            if (v_degree > 0) {
+                bot_degree_distribution[v_degree -1] += 1;
+            }
+            bot_degree_distribution[u_degree] -= 1;
+            bot_degree_distribution[v_degree] -= 1;
         }
-        if (v_degree > 0) {
-            bot_degree_distribution[v_degree -1] += 1;
-        }
-        bot_degree_distribution[u_degree] -= 1;
-        bot_degree_distribution[v_degree] -= 1;
+        bot_weightedDegree_sequence[u] -= 1;
+        bot_weightedDegree_sequence[v] -= 1;
 
     };
 
@@ -305,36 +325,40 @@ void HistoryGraph::removeEdgeProjection(HashGraph& proj_graph,const node node_ma
                 } else {
                     proj_graph.removeEdge(proj_node, n_proj); 
                 }
+                // decrease degree
+                if (is_top || (!is_top && !is_bipartite)) {
+
+                    decreaseTopDegree(proj_node, n_proj, w);
+                }else if (!is_top && is_bipartite){
+
+                    decreaseBotDegree(proj_node, n_proj, w);
+                }
+
 
                 
-            }
-            if (is_top || (!is_top && !is_bipartite)) {
-
-                decreaseTopDegree(proj_node, n_proj);
-            }else if (!is_top && is_bipartite){
-
-                decreaseBotDegree(proj_node, n_proj);
             }
         }
     };
 
 
 void HistoryGraph::updateGraph(const Interaction i){
-    auto increaseMainDegree = [&](node u, node v) {
+    auto increaseMainDegree = [&](node u, node v, int64_t weight) {
         // to be called ~AFTER~ increasing edge weight
+        // increase degree only if weight is equal to 1 (i.e. if edges was not present before)
         Count u_degree = main_graph.degree(u);
         Count v_degree = main_graph.degree(v);
-        main_degree_distribution[u_degree -1] += 1;
-        main_degree_distribution[v_degree -1] += 1;
+        if (weight == 1) {
+            main_degree_distribution[u_degree -1] += 1;
+            main_degree_distribution[v_degree -1] += 1;
+            if (u_degree > 1) {
+                main_degree_distribution[u_degree -2] -= 1;
+            }
+            if (v_degree > 1) {
+                main_degree_distribution[v_degree -2] -= 1;
+            }
+        }
         main_weightedDegree_sequence[u] += 1;
         main_weightedDegree_sequence[v] += 1;
-
-        if (u_degree > 1) {
-            main_degree_distribution[u_degree -2] -= 1;
-        }
-        if (v_degree > 1) {
-            main_degree_distribution[v_degree -2] -= 1;
-        }
 
     };
     Time t = i.t;
@@ -362,9 +386,10 @@ void HistoryGraph::updateGraph(const Interaction i){
     // update queue and main graph
     queue.push(i);
     main_graph.increaseWeight(u_main, v_main, 1);
+    //main_graph.max_weighted_degree(u_main, v_main);
 
     increaseTotalWeight();
-    increaseMainDegree(u_main, v_main); 
+    increaseMainDegree(u_main, v_main, counter[e]); 
 
     // update projection graph
     if (use_projection) {
