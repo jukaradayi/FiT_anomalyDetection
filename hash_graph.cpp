@@ -45,7 +45,7 @@ namespace StreamGraphs {
     }
 
     void HashGraph::increaseWeight(node u, node v, int weight){
-        Edge edge = Edge(u,v);
+        const Edge edge = Edge(u,v);
         HashGraph::Edges_weights[edge] += weight;
 
     }
@@ -77,12 +77,13 @@ namespace StreamGraphs {
     }
 
     void HashGraph::setWeight(node u, node v, int w){
-        Edge edge = Edge(u,v);
+        const Edge edge = Edge(u,v);
         HashGraph::Edges_weights[edge] = w;
     }
 
     bool HashGraph::hasEdge(node u, node v){
-        if(HashGraph::Edges.find(std::pair<node,node>(u,v)) != HashGraph::Edges.end()){
+        const Edge edge = Edge(u,v);
+        if(HashGraph::Edges.find(edge) != HashGraph::Edges.end()){
             return true;
         }
         else return false;
@@ -90,8 +91,9 @@ namespace StreamGraphs {
 
 
     void HashGraph::removeEdge(node u, node v){
-        HashGraph::Edges.erase(std::pair<node,node>(u,v));
-        HashGraph::Edges_weights.erase(Edge(u,v));
+        const Edge edge = Edge(u,v);
+        HashGraph::Edges.erase(edge);
+        HashGraph::Edges_weights.erase(edge);
     }
 
     int HashGraph::numberOfNodes(){
@@ -104,7 +106,8 @@ namespace StreamGraphs {
     }
     Count HashGraph::weight(node u,node v){
         //Edge::Edge()
-        return Edges_weights.at(Edge(u,v));
+        const Edge edge = Edge(u,v);
+        return Edges_weights.at(edge);
     }
 
 

@@ -69,6 +69,13 @@ struct Edge {
            return false;
        }
     }
+    bool operator==(const Edge &rhs) const {
+        if (u == rhs.u && v == rhs.v) {
+            return true;
+        } else{
+            return false;
+        }
+    }
 };
 inline void us_isect(std::unordered_set<node> &out,
         const std::unordered_set<node> &in1,

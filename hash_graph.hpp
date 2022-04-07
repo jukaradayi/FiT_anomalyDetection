@@ -43,15 +43,17 @@ class HashGraph { // TODO check who is private or public
 public:
 
     //google::sparse_hash_map<node, std::vector<node>,std::hash<uint64_t>> Neighbors;
-    std::map<node, std::vector<node>,std::hash<uint64_t>> Neighbors;
+    std::unordered_map<node, std::vector<node>> Neighbors;//,std::hash<node>>  ;
     // hash table of nodes
     //google::sparse_hash_map<std::pair<node,node>, int,std::hash<std::pair<uint64_t, uint64_t>>> Edges;
-    std::map<std::pair<node,node>, int,std::hash<std::pair<uint64_t, uint64_t>>> Edges;
+
+    //std::unordered_map<std::pair<node,node>, int,std::hash<std::pair<node, node>>> Edges;
+    std::unordered_map<Edge, int,std::hash<Edge>> Edges;
 
 
     //google::sparse_hash_set<Edge, std::pair<int,int>> Edges;
     //google::sparse_hash_map<Edge, int,std::hash<StreamGraphs::Edge>> Edges_weights;
-    std::map<Edge, int,std::hash<Edge>> Edges_weights;
+    std::unordered_map<Edge, int,std::hash<Edge>> Edges_weights;
     // number of nodes
     Count N_nodes;
     //current upper bound of node ids, z will be the id of the next node
@@ -135,11 +137,15 @@ public:
                 //imEdges = Edges.get(u)
                 //G->Edges.find(u)
                 return  NeighborIterator(G->Neighbors.at(u).begin());
+                //std::vector<node>::const_iterator nodesIter;
+                //return nodesIter;
             }
 
             NeighborIterator end() const {
                 assert(G);
-                return NeighborIterator(G->Neighbors.at(u).end());
+                //return NeighborIterator(G->Neighbors.at(u).end());
+                std::vector<node>::const_iterator nodesIter;
+                return nodesIter;
             }
 
         };
