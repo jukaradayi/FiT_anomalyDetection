@@ -79,7 +79,7 @@ def load_data(dataset):
         return df
     else:
         # Assume (t,u,v) with t in seconds, no header, separated by tabs
-        return pd.read_csv(dataset, header=None, sep=" ", names=['Datetime', 'Source', 'Target'])
+        return pd.read_csv(dataset, header=None, sep="\t", names=['Datetime', 'Source', 'Target'])
 
 
 def write_stream(stream, path, mapping_path):
