@@ -10,6 +10,17 @@ Given a link stream in input, aggregate the stream into different graph sizes an
 Installation
 ============
 
+Using Docker
+------------
+
+Build the docker image using 
+
+  docker build -t getting-started .
+
+To use the docker, you then have to create a data/ folder inside your current directory, put your <file> in data/, then run using 
+
+  docker run -v $PWD/data:/mnt/data -it getting-started <file> <njobs>
+
 Requirements
 ------------
 
