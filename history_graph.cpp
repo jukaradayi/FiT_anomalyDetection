@@ -207,18 +207,18 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
     };
 
     // iterate over bounded neighbors to add nodes 
-    for (BoundedNeighborIterator bN = BoundedNeighborRange(main_graph, node_main, proj_bound).begin(); 
-            bN != BoundedNeighborRange(main_graph, node_main, proj_bound).end(); ++bN) {
-    //for (NetworKit::Graph::NeighborIterator N_it = main_graph.neighborRange(node_main).begin();
-    //        N_it != main_graph.neighborRange(node_main).end(); ++N_it) {
+    //for (BoundedNeighborIterator bN = BoundedNeighborRange(main_graph, node_main, proj_bound).begin(); 
+    //        bN != BoundedNeighborRange(main_graph, node_main, proj_bound).end(); ++bN) {
+    //for (NetworKit::Graph::NeighborIterator bN = main_graph.neighborRange(node_main).begin();
+    //        bN != main_graph.neighborRange(node_main).end(); ++bN) {
+    forBoundedNeighbors(main_graph, node_main, [&] (node n_main) {
 
 
-        node n = main2node[*bN];
-        //node n = main2node[*N_it];
-        //if (main_graph.degree(n) >= main_bound) {
+        node n = main2node[n_main];
+        ////node n = main2node[*N_it];
+        //if (main_graph.degree(*bN) >= main_bound) {
         //     continue;
         //}
-
 
         node n_proj;
         if (is_top || (!is_top && !is_bipartite)) {
@@ -232,7 +232,7 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
         }
         if (n_proj == proj_node) {
             // no self loop
-            continue;
+            return;
         } // TODO CHANGE IS TOP 
         if (is_top || (!is_top && !is_bipartite)) {
             // redundancy_top = (top_proj.hasEdge(proj_node, n_proj)) ? redundancy_top : redundancy_top + 1;
@@ -245,7 +245,7 @@ void HistoryGraph::addEdgeProjection(const node node_main, const node proj_node,
             increaseBotDegree(proj_node, n_proj, w);
         }
 
-    }
+    });
 
 };
 

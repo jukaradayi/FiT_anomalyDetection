@@ -158,13 +158,29 @@ public:
     inline void increaseTotalWeight(){total_weight+=1;};
     inline void decreaseTotalWeight(){total_weight-=1;};
     inline Count getTotalWeight(){return total_weight;};
+
+    // bounded iterator
+    template <typename L>
+    void forBoundedNeighbors(NetworKit::Graph& graph, node u, L handle) const;
+
 private:
-    Count total_weight;
+    Count total_weight = 0;
     Count redundancy_top;
     Count redundancy_bot;
 
 
 };
 
+template <typename L>
+void HistoryGraph::forBoundedNeighbors(NetworKit::Graph& graph, node u, L handle) const {
+    for (NetworKit::Graph::NeighborIterator bN = graph.neighborRange(u).begin();
+                bN != graph.neighborRange(u).end(); ++bN) {
+        if (graph.degree(*bN) < main_bound) {
+            handle(*bN);
+        }
+
+
+    }
+}
 }
 #endif

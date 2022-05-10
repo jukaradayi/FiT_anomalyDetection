@@ -108,19 +108,36 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
 
             //G.forEdgesOf(n, [&](node v) {
 
-        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
-            bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
+        //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
+        //    bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
+        for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
+             bN != history.main_graph.neighborRange(u_node).end(); ++bN) {
+
+                //node nn_main = *bNN;
                 node n = *bN;
+                if (history.main_graph.degree(n) >= history.main_bound) {
+                    continue;
+                }
+
+                //node n = *bN;
 
                 nodeMarker[tid][n] = true;
             }
 
             //G.forEdgesOf(u, [&](node, node v) {
 
-        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
-            bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
+        //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
+        //    bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
+        //        node n = *bN;
+         for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
+             bN != history.main_graph.neighborRange(u_node).end(); ++bN) {
+
+                //node nn_main = *bNN;
                 node n = *bN;
- 
+                if (history.main_graph.degree(n) >= history.main_bound) {
+                    continue;
+                }
+
                 //if (turbo) {
                 for (index i = inBegin[n]; i < inBegin[n+1]; ++i) {
 
@@ -141,9 +158,18 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
             }
 
             //G.forEdgesOf(u, [&](node, node v) {
-            for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
-                bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
+            //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
+            //    bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
+            for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
+                 bN != history.main_graph.neighborRange(u_node).end(); ++bN) {
+
+                    //node nn_main = *bNN;
                     node n = *bN;
+                    if (history.main_graph.degree(n) >= history.main_bound) {
+                        continue;
+                    }
+
+                    //node n = *bN;
                     nodeMarker[tid][n] = false;
             }
 
@@ -283,46 +309,55 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::unordered_set<node> bNu_n_bNv;
 
         //// fill sets
-        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_main, history.main_bound).begin();
-            bN != BoundedNeighborRange(history.main_graph, u_main, history.main_bound).end(); ++bN) {
-        //for (NetworKit::Graph::NeighborIterator N_it = history.main_graph.neighborRange(u_main).begin();
-        //        N_it != history.main_graph.neighborRange(u_main).end(); ++N_it) {
+        //std::cout << "u " << u_main << " v " << v_main << "\n";
+        //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_main, history.main_bound).begin();
+        //    bN != BoundedNeighborRange(history.main_graph, u_main, history.main_bound).end(); ++bN) {
+        for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_main).begin();
+                bN != history.main_graph.neighborRange(u_main).end(); ++bN) { // boundedIncrementor(history.main_graph, history.main_bound, bN, history.main_graph.neighborRange(u_main).end())) {
             node n_main = *bN;
             //node n_main = *N_it;
 
-            //if (history.main_graph.degree(n_main) >= history.main_bound) {
-            //    continue;
-            //}
+            if (history.main_graph.degree(n_main) >= history.main_bound) {
+                continue;
+            }
+            //std::cout << n_main << " is a neighbor of u with degree bipbip " << history.main_graph.degree(n_main) << " \n";
+
             bNu.insert(n_main);
             bNu_u_bNNv.insert(n_main);
 
-            for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
-                bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
-            //for (NetworKit::Graph::NeighborIterator NN_it = history.main_graph.neighborRange(n_main).begin();
-            //     NN_it != history.main_graph.neighborRange(n_main).end(); ++NN_it) {
+            //for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
+            //    bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
+            for (NetworKit::Graph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
+                 bNN != history.main_graph.neighborRange(n_main).end(); ++bNN) {
 
                 node nn_main = *bNN;
                 //node nn_main = *NN_it;
-                //if (history.main_graph.degree(nn_main) >= history.main_bound) {
-                //    continue;
-                //}
+                if (history.main_graph.degree(nn_main) >= history.main_bound) {
+                    continue;
+                }
 
                 bNNu.insert(nn_main);
                 bNNu_u_bNv.insert(nn_main);
             }
         }
 
-        for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, v_main, history.main_bound).begin();
-            bN != BoundedNeighborRange(history.main_graph, v_main, history.main_bound).end(); ++bN) {
+        //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, v_main, history.main_bound).begin();
+        //    bN != BoundedNeighborRange(history.main_graph, v_main, history.main_bound).end(); ++bN) {
+        for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(v_main).begin();
+                bN != history.main_graph.neighborRange(v_main).end(); ++bN) {
+
             node n_main = *bN;
+
+
         //for (NetworKit::Graph::NeighborIterator N_it = history.main_graph.neighborRange(v_main).begin();
         //        N_it != history.main_graph.neighborRange(v_main).end(); ++N_it) {
             //node n_main = *bN;
             //node n_main = *N_it;
 
-            //if (history.main_graph.degree(n_main) >= history.main_bound) {
-            //    continue;
-            //}
+            if (history.main_graph.degree(n_main) >= history.main_bound) {
+                continue;
+            }
+            //std::cout << n_main << " is a neighbor of v with degree " << history.main_graph.degree(n_main) << " \n";
 
             bNv.insert(n_main);
             //std::pair<std::unordered_set<node>,bool> insertion = bNNu_u_bNv.insert(n_main);
@@ -337,11 +372,11 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             //for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
             //    bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
             //    node nn_main = *bNN;
-            for (NetworKit::Graph::NeighborIterator NN_it = history.main_graph.neighborRange(n_main).begin();
-                 NN_it != history.main_graph.neighborRange(n_main).end(); ++NN_it) {
+            for (NetworKit::Graph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
+                 bNN != history.main_graph.neighborRange(n_main).end(); ++bNN) {
 
                 //node nn_main = *bNN;
-                node nn_main = *NN_it;
+                node nn_main = *bNN;
                 if (history.main_graph.degree(nn_main) >= history.main_bound) {
                     continue;
                 }
