@@ -47,8 +47,8 @@ void GGraph::trimQueue(Time t) {
 
         main_graph.setWeight(u0_main, v0_main, counter[e0]);
         decreaseTotalWeight();
-        main_weightedDegree_sequence[i0.u] -= 1;
-        main_weightedDegree_sequence[i0.v] -= 1;
+        main_weightedDegree_sequence[u0_main] -= 1;
+        main_weightedDegree_sequence[v0_main] -= 1;
 
         // remove edge when needed
         if (counter[e0] == 0 && main_graph.hasEdge(u0_main, v0_main)) {
