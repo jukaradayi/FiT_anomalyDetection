@@ -92,7 +92,7 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
     //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_main, history.main_bound).begin();
     //    bN != BoundedNeighborRange(history.main_graph, u_main, history.main_bound).end(); ++bN) {
     //    node n = *bN;
-        if (u_node != u || u_node != v) {
+        if (u_node != u && u_node != v) {
             return;
         }
         count d = G.degree(u_node);
