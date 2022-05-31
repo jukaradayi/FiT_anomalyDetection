@@ -86,7 +86,7 @@ namespace StreamGraphs {
         }
         if(indice_v == HashGraph::Neighbors.at(v).size()) HashGraph::Neighbors.at(v).emplace_back(u);
         */
-        
+
         //ajouter sur weightEdge
         if(HashGraph::Edges_weights.find(edge)==HashGraph::Edges_weights.end()){
             HashGraph::Edges_weights.emplace(edge,weight);
