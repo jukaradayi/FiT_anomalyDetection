@@ -6,6 +6,11 @@
 #include "history_graph.hpp"
 #include <networkit/graph/Graph.hpp>
 #include <unordered_set>
+#include <chrono>
+#include <time.h>
+#include <ctime>
+#include <iostream>
+#include <fstream>
 //#include <boost/iterator/filter_iterator.hpp>
 namespace StreamGraphs {
 
@@ -337,12 +342,22 @@ void HistoryGraph::removeEdgeProjection(HashGraph& proj_graph,const node node_ma
     };
 
 
-void HistoryGraph::updateGraph(const Interaction i){
+TimeFonction HistoryGraph::updateGraph(const Interaction i){
+    double dur_update;
+    double dur_degree;
+    double dur_incresaeweight;
+    double dur_fon;
+    std::string distribuT;
     auto increaseMainDegree = [&](node u, node v, int64_t weight) {
         // to be called ~AFTER~ increasing edge weight
         // increase degree only if weight is equal to 1 (i.e. if edges was not present before)
+        std::clock_t t1_degree = std::clock();
         Count u_degree = main_graph.degree(u);
         Count v_degree = main_graph.degree(v);
+        std::clock_t t2_degree = std::clock(); // end clock
+        dur_degree += (t2_degree - t1_degree) / (double)CLOCKS_PER_SEC; // time in seconds
+
+
         if (weight == 1) {
             main_degree_distribution[u_degree -1] += 1;
             main_degree_distribution[v_degree -1] += 1;
@@ -357,13 +372,17 @@ void HistoryGraph::updateGraph(const Interaction i){
         main_weightedDegree_sequence[v] += 1;
 
     };
+    std::clock_t t1_fon = std::clock();
     Time t = i.t;
     Edge e(i.u, i.v);
 
     // if node doesn't exist, add node, else increase weight
     node u_main;
     if (node2main[i.u] == none){
+        std::clock_t t1_update = std::clock();
         u_main = addNode(i.u, true);
+        std::clock_t t2_update = std::clock(); // end clock
+        dur_update += (t2_update - t1_update) / (double)CLOCKS_PER_SEC; // time in seconds
     } else {
         u_main = node2main[i.u]; 
     }
@@ -371,7 +390,10 @@ void HistoryGraph::updateGraph(const Interaction i){
     node v_main;
 
     if (node2main[i.v] == none){
+        std::clock_t t3_update = std::clock();
         v_main = addNode(i.v, false);
+        std::clock_t t4_update = std::clock(); // end clock
+        dur_update += (t4_update - t3_update) / (double)CLOCKS_PER_SEC; // time in seconds
     } else {
         v_main = node2main[i.v];
     }
@@ -381,7 +403,14 @@ void HistoryGraph::updateGraph(const Interaction i){
 
     // update queue and main graph
     queue.push(i);
+    //std::clock_t updatetotal1 = std::clock();
+    std::clock_t t1_increase = std::clock();
     main_graph.increaseWeight(u_main, v_main, 1);
+    std::clock_t t2_increase = std::clock(); // end clock
+    dur_incresaeweight += (t2_increase - t1_increase) / (double)CLOCKS_PER_SEC; // time in seconds
+    //std::clock_t updatetotal2 = std::clock();
+    //std::cout <<" increaseWeight time " << std::to_string((updatetotal2 - updatetotal1)) <<"\n";
+
     //main_graph.max_weighted_degree(u_main, v_main);
 
     increaseTotalWeight();
@@ -417,6 +446,13 @@ void HistoryGraph::updateGraph(const Interaction i){
     }
     // remove links to fit window
     trimQueue(t);
+    std::clock_t t2_fon = std::clock(); // end clock
+    dur_fon += (t2_fon - t1_fon) / (double)CLOCKS_PER_SEC; // time in seconds
+
+    TimeFonction res = TimeFonction(dur_update,dur_degree,dur_incresaeweight,dur_fon);
+
+    //distribuT="fonction time total: "+std::to_string(dur_fon)+" addNode time: "+std::to_string(dur_update)+" degree timn: "+std::to_string(dur_degree)+" increaseWeight time: "+std::to_string(dur_incresaeweight);
+    return res;
 }
 
 };

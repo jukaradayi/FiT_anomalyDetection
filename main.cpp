@@ -264,6 +264,9 @@ int main(int argc, char* argv[]) {
         double dur_metric;
         double dur_metric_whole;
         double dur_update;
+        double addNode_time = 0;
+        std::string timefonction;
+        TimeFonction timef = TimeFonction(0,0,0,0);
 
         // log outputs
         std::string log_output = "";
@@ -273,12 +276,13 @@ int main(int argc, char* argv[]) {
         std::clock_t startcputime = std::clock();
         myoutput.open (outname, std::ios::app);
         mylog.open (logname, std::ios::app);
+        //ecrire le temps total pour updategraph
+        std::clock_t updatetotal1 = std::clock();
         
         for(CSVIterator main_loop = CSVRange(file).begin(); main_loop != CSVRange(file).end(); ++main_loop)
         {
             Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
-            //output += std::to_string(line_number) + ","; // get interaction id 
-
+            //output += std::to_string(line_number) + ","; // get interaction id
             if (i.u == i.v)  // skip self-loop, in darpa for example
             {
                 ++line_number;
@@ -286,7 +290,13 @@ int main(int argc, char* argv[]) {
             }
 
             std::clock_t t1_update = std::clock(); // start clock 
-            hist_graph->updateGraph(i);            // update graph
+            //addNode_time += hist_graph->updateGraph(i);            // update graph
+            TimeFonction timetmp =  hist_graph->updateGraph(i);// update graph
+            timef.increaseWeighttime+=timetmp.increaseWeighttime;
+            timef.fonTotaltime += timetmp.fonTotaltime;
+            timef.degreetime += timetmp.degreetime;
+            timef.addNodetime += timetmp.addNodetime;
+
             std::clock_t t2_update = std::clock(); // end clock
             dur_update += (t2_update - t1_update) / (double)CLOCKS_PER_SEC; // time in seconds
 
@@ -326,7 +336,7 @@ int main(int argc, char* argv[]) {
                 mylog << current_time << " average update time " << std::to_string(dur_update/100) <<"\n" ;
                 mylog << current_time << " average metric time " << std::to_string(dur_metric/100) <<"\n" ;
                 mylog << current_time << " overall average metric time " << std::to_string(dur_metric_whole/(line_number-499)) <<"\n" << std::flush;
-
+                //mylog << timefonction<<"\n"  ;
                 //mylog.close();
                 dur_metric = 0;
                 dur_update = 0;
@@ -334,6 +344,13 @@ int main(int argc, char* argv[]) {
 
             ++line_number;
         }
+        std::clock_t updatetotal2 = std::clock();
+        mylog <<" update graph total time " << std::to_string((updatetotal2 - updatetotal1) / (double)CLOCKS_PER_SEC) <<"\n" ;
+        std::string distribuT="fonction time total: "+std::to_string(timef.fonTotaltime)
+                +" addNode time: "+std::to_string(timef.addNodetime)
+                +" degree timn: "+std::to_string(timef.degreetime)
+                +" increaseWeight time: "+std::to_string(timef.increaseWeighttime);
+        mylog <<distribuT<<"\n" ;
         myoutput.close();
         mylog.close();
 

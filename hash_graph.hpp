@@ -30,6 +30,7 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <tsl/robin_map.h>
 //#include <string_view>
 
 using namespace NetworKit;
@@ -43,17 +44,20 @@ class HashGraph { // TODO check who is private or public
 public:
 
     //google::sparse_hash_map<node, std::vector<node>,std::hash<uint64_t>> Neighbors;
-    std::unordered_map<node, std::vector<node>> Neighbors;//,std::hash<node>>  ;
+    //std::unordered_map<node, std::vector<node>> Neighbors;//,std::hash<node>>  ;
+    tsl::robin_map<node, std::vector<node>> Neighbors;
     // hash table of nodes
     //google::sparse_hash_map<std::pair<node,node>, int,std::hash<std::pair<uint64_t, uint64_t>>> Edges;
 
     //std::unordered_map<std::pair<node,node>, int,std::hash<std::pair<node, node>>> Edges;
-    std::unordered_map<Edge, int,std::hash<Edge>> Edges;
-
+    //std::unordered_map<Edge, int,std::hash<Edge>> Edges;
+    tsl::robin_map<Edge, int,std::hash<Edge>> Edges;
 
     //google::sparse_hash_set<Edge, std::pair<int,int>> Edges;
     //google::sparse_hash_map<Edge, int,std::hash<StreamGraphs::Edge>> Edges_weights;
-    std::unordered_map<Edge, int,std::hash<Edge>> Edges_weights;
+    //std::unordered_map<Edge, int,std::hash<Edge>> Edges_weights;
+    tsl::robin_map<Edge, int,std::hash<Edge>> Edges_weights;
+
     // number of nodes
     Count N_nodes;
     //current upper bound of node ids, z will be the id of the next node
@@ -285,12 +289,14 @@ public:
 
     ~HashGraph();
 
-
+// comparer le temps
     Count degree(node u) const;
 
     void increaseWeight(node u, node v, int weight);
 
     node addNode();
+
+    void addEdge(node u, node v, int weight);
 
     void restoreNode(node u);
 
@@ -301,6 +307,8 @@ public:
     bool hasEdge(node u, node v);
 
     void removeEdge(node u, node v);
+
+    //end of comparer
 
     int numberOfNodes();
 

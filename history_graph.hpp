@@ -71,6 +71,17 @@ namespace StreamGraphs {
 //    }
 //};
 
+class TimeFonction{
+public:
+    double addNodetime;
+    double degreetime;
+    double increaseWeighttime;
+    double fonTotaltime;
+    TimeFonction(double addNodetime,double degreetime, double increaseWeighttime,double fonTotaltime):
+    addNodetime(addNodetime),degreetime(degreetime),increaseWeighttime(increaseWeighttime),fonTotaltime(fonTotaltime){};
+    ~TimeFonction(){};
+};
+
 class HistoryGraph { // TODO check who is private or public
 public:
     // main graph
@@ -144,7 +155,7 @@ public:
     ~HistoryGraph();
     //void HistoryGraph::restoreNode(node u);
 
-    void updateGraph(const Interaction i);
+    TimeFonction updateGraph(const Interaction i);
 
     node addNode(const node _u, const bool is_top);
 
