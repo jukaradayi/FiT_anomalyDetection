@@ -124,6 +124,9 @@ public:
     };
 
     std::pair<double, double> localClustering(const NetworKit::Graph& G, const node u, const node v);
+
+    int countLinks(const NetworKit::Graph& G, const std::unordered_set<node>& nodes, int bound);
+
     //double weight_concentration();
     //double difference_to_average_weight();
     //double weight_relative_u();

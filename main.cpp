@@ -289,9 +289,9 @@ int main(int argc, char* argv[]) {
             std::clock_t t2_update = std::clock(); // end clock
             dur_update += (t2_update - t1_update) / (double)CLOCKS_PER_SEC; // time in seconds
 
-            // start metrics at line 500 // TODO start metrics at window size
+            // start metrics at window size
             std::clock_t t1_metric = std::clock(); // start clock
-            if (line_number > 499 && (metrics1 || metrics2 || metrics3) )
+            if (line_number > hist_sizes[graph_idx] && (metrics1 || metrics2 || metrics3) )
             {
                 output += metrics.run(i.u, i.v, line_number);
                 myoutput << output << std::flush;
@@ -337,6 +337,8 @@ int main(int argc, char* argv[]) {
         std::clock_t endcputime = std::clock();
         double cpu_duration = (endcputime - startcputime) / (double)CLOCKS_PER_SEC;
         mylog.open (logname, std::ios::app);
+
+        // Get current time
         auto end = std::chrono::system_clock::now();
         std::time_t end_time = std::chrono::system_clock::to_time_t(end);
         std::string current_time = std::ctime(&end_time);

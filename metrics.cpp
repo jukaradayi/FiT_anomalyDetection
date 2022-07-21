@@ -45,9 +45,58 @@ Metrics::Metrics(HistoryGraph& history,const bool use_basic,const bool use_local
 
 Metrics::~Metrics() {}
 
-//double Metrics::localClustering(const node u, const node v) {
-//    return 1.0;
+// TODO : a tester,  pourquoi tout parcourir, on peut juste parcourir les voisinage et voisinages de voisinages qu'on a déjà mesuré ... 
+//
+//int metrics::countLinks(const NetworKit::Graph &G, const std::vector<node> &nodes, int bound){
+//    int n_links = 0;
+//    std::unordered_set<node> visited_links;
+//    for (int i=0; i!=nodes.size(); ++i) {
+//        node u = nodes[i];
+//        for (NetworKit::Graph::NeighborIterator bN = G.neighborRange(u).begin();
+//               bN != G.neighborRange(u).end(); ++bN) { 
+//            node n = *bN;
+//            if (G.degree(n) >= bound) {
+//                continue;
+//            }
+//            if (std::find(nodes.begin(), nodes.end(), n) != nodes.end()) {
+//                if (n > u) {
+//                    std::pair<node,node> myEdge = std::make_pair(u, v); 
+//                } else {
+//                    std::pair<node,node> myEdge = std::make_pair(v,u);  
+//                    continue;
+//                }
+//
+//                n_links += 1;
+//            }
+//        
+//        }
+//    }
 //}
+int Metrics::countLinks(const NetworKit::Graph &G, const std::unordered_set<node> &nodes, int bound){
+    //std::unordered_set<node> visited_links;
+    int n_links = 0;
+    for (auto it= nodes.begin(); it != nodes.end(); ++it) {
+        //node u = nodes[i];
+        node u = *it;
+        for (NetworKit::Graph::NeighborIterator bN = G.neighborRange(u).begin();
+               bN != G.neighborRange(u).end(); ++bN) { 
+            node n = *bN;
+            if (G.degree(n) >= bound) { // not needed because already sorted :)
+                continue;
+            }
+            if (std::find(nodes.begin(), nodes.end(), n) != nodes.end()) {
+                if (n > u) { // count links only once
+                    n_links += 1;
+                } else {
+                    continue;
+                }
+
+            }
+        
+        }
+    }
+    return n_links;
+}
 
 std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, const node u, const node v) {
     count z = G.upperNodeIdBound();
@@ -220,6 +269,8 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
     //    /*Basic metrics*/
     //    /***************/
     if (use_basic) {
+        auto t_start = std::chrono::high_resolution_clock::now();
+        std::clock_t startcputime_O1 = std::clock();
 
         integerResults["number of nodes"] = history.main_graph.numberOfNodes(); 
         integerResults["number of links"] = history.main_graph.numberOfEdges();
@@ -286,9 +337,21 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             //integerResults["top max weighted degree"] = top_max_weighted_degree();
             //if (history.is_bipartite) integerResults["bot max weighted degree"] = bot_max_weighted_degree();
         }
+        std::clock_t endcputime_O1 = std::clock();
+        auto t_end = std::chrono::high_resolution_clock::now();
+
+        double dur_O1 = (endcputime_O1 - startcputime_O1) / (double)CLOCKS_PER_SEC; // time in seconds
+        double clock_O1 = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+       
+        doubleResults["O1 duration"] = dur_O1;
+        doubleResults["O1 wall clock"] =  clock_O1;
+        //}
+
     };
     
     if (use_local) {
+        std::clock_t startcputime_Ok = std::clock();
+
         //    //// sets
         //    // get distance 1 and 2 neighbor sets, basic sets
 
@@ -309,65 +372,62 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::unordered_set<node> bNu_n_bNv;
 
         //// fill sets
-        //std::cout << "u " << u_main << " v " << v_main << "\n";
-        //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_main, history.main_bound).begin();
-        //    bN != BoundedNeighborRange(history.main_graph, u_main, history.main_bound).end(); ++bN) {
         for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_main).begin();
-                bN != history.main_graph.neighborRange(u_main).end(); ++bN) { // boundedIncrementor(history.main_graph, history.main_bound, bN, history.main_graph.neighborRange(u_main).end())) {
+                bN != history.main_graph.neighborRange(u_main).end(); ++bN) { 
             node n_main = *bN;
-            //node n_main = *N_it;
 
             if (history.main_graph.degree(n_main) >= history.main_bound) {
                 continue;
             }
-            //std::cout << n_main << " is a neighbor of u with degree bipbip " << history.main_graph.degree(n_main) << " \n";
 
+            // build neighborhood
             bNu.insert(n_main);
-            bNu_u_bNNv.insert(n_main);
+        
 
-            //for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
-            //    bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
+            // build unions 
+            bNu_u_bNv.insert(n_main);
+            bNu_u_bNNv.insert(n_main);
+            bNu_u_bNNu.insert(n_main);
+
             for (NetworKit::Graph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
                  bNN != history.main_graph.neighborRange(n_main).end(); ++bNN) {
 
                 node nn_main = *bNN;
-                //node nn_main = *NN_it;
                 if (history.main_graph.degree(nn_main) >= history.main_bound) {
                     continue;
                 }
 
+                // build neighborhood
                 bNNu.insert(nn_main);
+
+                // build unions
                 bNNu_u_bNv.insert(nn_main);
+                bNu_u_bNNu.insert(nn_main);
             }
         }
 
-        //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, v_main, history.main_bound).begin();
-        //    bN != BoundedNeighborRange(history.main_graph, v_main, history.main_bound).end(); ++bN) {
         for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(v_main).begin();
                 bN != history.main_graph.neighborRange(v_main).end(); ++bN) {
 
             node n_main = *bN;
 
-
-        //for (NetworKit::Graph::NeighborIterator N_it = history.main_graph.neighborRange(v_main).begin();
-        //        N_it != history.main_graph.neighborRange(v_main).end(); ++N_it) {
-            //node n_main = *bN;
-            //node n_main = *N_it;
-
             if (history.main_graph.degree(n_main) >= history.main_bound) {
                 continue;
             }
-            //std::cout << n_main << " is a neighbor of v with degree " << history.main_graph.degree(n_main) << " \n";
 
+            // build neighborhood
             bNv.insert(n_main);
-            //std::pair<std::unordered_set<node>,bool> insertion = bNNu_u_bNv.insert(n_main);
-            auto insertion = bNNu_u_bNv.insert(n_main);
 
+            // build unions and intersections
+            auto NNuNv_insertion = bNNu_u_bNv.insert(n_main);
+            auto NuNv_insertion = bNu_u_bNv.insert(n_main);
 
-            //if (bNNu.find(n_main) != bNNu.end()) {
             // if insertion.second returns false, it means the element already exists in bNNu_u_bNv 
-            if (insertion.second == false){
+            if (NNuNv_insertion.second == false){
                 bNNu_n_bNv.insert(n_main);
+            }
+            if (NuNv_insertion.second == false){
+                bNu_n_bNv.insert(n_main);
             }
             //for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
             //    bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
@@ -383,11 +443,11 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
 
                 bNNv.insert(nn_main);
                 //std::pair<std::unordered_set<node>,bool> insertion = bNu_u_bNNv.insert(nn_main);
-                auto insertion = bNu_u_bNNv.insert(nn_main);
+                auto NuNNv_insertion = bNu_u_bNNv.insert(nn_main);
 
 
                 //if (bNu.find(nn_main) != bNu.end()) {
-                if (insertion.second == false){
+                if (NuNNv_insertion.second == false){
                     bNu_n_bNNv.insert(nn_main);
                 }
             }
@@ -398,7 +458,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         //    // egonet sets
 
         us_isect(bNNuNv_n_bNuNNv, bNNu_u_bNv, bNu_u_bNNv); // intersection builder
-        us_isect(bNu_n_bNv, bNu, bNv); // intersection builder
+        //us_isect(bNu_n_bNv, bNu, bNv); // intersection builder
 
         bNNuNv_u_bNuNNv.insert(bNNu_u_bNv.begin(),bNNu_u_bNv.end());
         bNNuNv_u_bNuNNv.insert(bNu_u_bNNv.begin(),bNu_u_bNNv.end());
@@ -410,23 +470,33 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         bNu_u_bNv.insert(bNv.begin(), bNv.end());
 
         // egonets from node sets 
-        Graph egonet_NNuNv_u_NuNNv = GraphTools::subgraphFromNodes(history.main_graph, bNNuNv_u_bNuNNv);
-        Graph egonet_NNuNv_n_NuNNv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNNuNv_u_bNuNNv);
-        Graph egonet_Nu_u_NNu = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNu_u_bNNu);
-        Graph egonet_Nv_u_NNv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNv_u_bNNv);
-        Graph egonet_Nu_u_Nv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNu_u_bNv);
-        Graph egonet_Nu = GraphTools::subgraphFromNodes(egonet_Nu_u_Nv, bNu);
-        Graph egonet_Nv = GraphTools::subgraphFromNodes(egonet_Nu_u_Nv, bNv);
+        //Graph egonet_NNuNv_u_NuNNv = GraphTools::subgraphFromNodes(history.main_graph, bNNuNv_u_bNuNNv);
+        //Graph egonet_NNuNv_n_NuNNv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNNuNv_u_bNuNNv);
+        //Graph egonet_Nu_u_NNu = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNu_u_bNNu);
+        //Graph egonet_Nv_u_NNv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNv_u_bNNv);
+        //Graph egonet_Nu_u_Nv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNu_u_bNv);
+        //Graph egonet_Nu = GraphTools::subgraphFromNodes(egonet_Nu_u_Nv, bNu);
+        //Graph egonet_Nv = GraphTools::subgraphFromNodes(egonet_Nu_u_Nv, bNv);
 
         //    /******************/
         //    /*local clustering*/
         //    /******************/
 
         //LocalClusteringCoefficient clustering(history.main_graph, true);
-        std::pair<double, double> clustering = localClustering(history.main_graph, u_main, v_main);
-        doubleResults["clustering u"] = clustering.first;
+        if (degree(u) < 2) {
+            doubleResults["clustering u"] = 0.0;
+        } else {
+            doubleResults["clustering u"] = 2.0 * ((double) countLinks(history.main_graph, bNu, history.main_bound)) / (history.main_graph.degree(u_main) * (history.main_graph.degree(u_main) -1));
+        }
+        if (degree(v) < 2) {
+            doubleResults["clustering v"] = 0.0;
+        } else {
+            doubleResults["clustering v"] = 2.0 * ((double) countLinks(history.main_graph, bNv, history.main_bound)) / (history.main_graph.degree(v_main) * (history.main_graph.degree(v_main) -1));
+        }
+        //std::pair<double, double> clustering = localClustering(history.main_graph, u_main, v_main);
+        //doubleResults["clustering u"] = clustering.first;
 
-        doubleResults["clustering v"] = clustering.second;
+        //doubleResults["clustering v"] = clustering.second;
         //clustering.run();
 
         //doubleResults["clustering u"] = clustering.score(u_main);
@@ -471,29 +541,54 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         integerResults["neighborhood overlap"] = bNu_u_bNv.size();
         //integerResults["top nehborhood size"] =  
         //integerResults["top nehborhood size"]
+        //int Metrics::countLinks(const NetworKit::Graph &G, const std::vector<node> &nodes, int bound)
 
-        integerResults["egonet Nu number of links"] = egonet_Nu.numberOfEdges();
-        integerResults["egonet Nu number of nodes"] = egonet_Nu.numberOfNodes();
-        integerResults["egonet Nv number of links"]  = egonet_Nv.numberOfEdges();
-        integerResults["egonet Nv number of nodes"]  = egonet_Nv.numberOfNodes();
+        integerResults["Nu number of links"] = countLinks(history.main_graph, bNu, history.main_bound);
+        integerResults["Nu number of nodes"] = bNu.size();
+        integerResults["Nv number of links"]  = countLinks(history.main_graph, bNu, history.main_bound);
+        integerResults["Nv number of nodes"]  = bNv.size();;
 
-        integerResults["egonet Nu u Nv number of links"] = egonet_Nu_u_Nv.numberOfEdges();
-        integerResults["egonet Nu u Nv number of nodes"]  = egonet_Nu_u_Nv.numberOfNodes();
+        integerResults["Nu u Nv number of links"] = countLinks(history.main_graph, bNu_u_bNv, history.main_bound);
+        integerResults["Nu u Nv number of nodes"]  = bNu_u_bNv.size();
 
-        integerResults["egonet Nv u NNv number of links"] = egonet_Nv_u_NNv.numberOfEdges();
-        integerResults["egonet Nv u NNv number of nodes"]  = egonet_Nv_u_NNv.numberOfNodes();
-        integerResults["egonet Nu u NNu number of links"] = egonet_Nu_u_NNu.numberOfEdges();
-        integerResults["egonet Nu u NNu number of nodes"]  = egonet_Nu_u_NNu.numberOfNodes();
-        integerResults["egonet (NNu u Nv) u (Nu u NNv) number of links"] = egonet_NNuNv_u_NuNNv.numberOfEdges();
-        integerResults["egonet (NNu u Nv) u (Nu u NNv) number of nodes"] = egonet_NNuNv_u_NuNNv.numberOfNodes();
-        integerResults["egonet (NNu u Nv) n (Nu u NNv) number of links"] = egonet_NNuNv_n_NuNNv.numberOfEdges();
-        integerResults["egonet (NNu u Nv) n (Nu u NNv) number of nodes"] = egonet_NNuNv_n_NuNNv.numberOfNodes();
+        integerResults["Nv u NNv number of links"] = countLinks(history.main_graph, bNv_u_bNNv, history.main_bound);
+        integerResults["Nv u NNv number of nodes"]  = bNv_u_bNNv.size();
+        integerResults["Nu u NNu number of links"] =  countLinks(history.main_graph, bNu_u_bNNu, history.main_bound);
+        integerResults["Nu u NNu number of nodes"]  = bNu_u_bNNu.size();
+        integerResults["(NNu u Nv) u (Nu u NNv) number of links"] = countLinks(history.main_graph, bNNuNv_u_bNuNNv, history.main_bound);
+        integerResults["(NNu u Nv) u (Nu u NNv) number of nodes"] = bNNuNv_u_bNuNNv.size();
+        integerResults["(NNu u Nv) n (Nu u NNv) number of links"] = countLinks(history.main_graph, bNNuNv_n_bNuNNv, history.main_bound);
+        integerResults["(NNu u Nv) n (Nu u NNv) number of nodes"] = bNNuNv_n_bNuNNv.size();
 
-        integerResults["egonet Nu u Nv maxsize"] = bNu.size() * bNv.size();
-        integerResults["egonet Nv u NNv maxsize"] = bNv.size() * bNNv.size();
-        integerResults["egonet Nu u NNu maxsize"] = bNu.size() * bNNu.size();
-        integerResults["egonet (NNu u Nv) u (Nu u NNv) maxsize"] = bNu_u_bNNv.size() * bNNu_u_bNv.size();
-        integerResults["egonet (NNu u Nv) n (Nu u NNv) maxsize"] =  bNu_n_bNNv.size() * bNNu_n_bNv.size();
+        integerResults["Nu u Nv maxsize"] = bNu.size() * bNv.size();
+        integerResults["Nv u NNv maxsize"] = bNv.size() * bNNv.size();
+        integerResults["Nu u NNu maxsize"] = bNu.size() * bNNu.size();
+        integerResults["(NNu u Nv) u (Nu u NNv) maxsize"] = bNu_u_bNNv.size() * bNNu_u_bNv.size();
+        integerResults["(NNu u Nv) n (Nu u NNv) maxsize"] =  bNu_n_bNNv.size() * bNNu_n_bNv.size();
+
+
+        //integerResults["egonet Nu number of links"] = egonet_Nu.numberOfEdges();
+        //integerResults["egonet Nu number of nodes"] = egonet_Nu.numberOfNodes();
+        //integerResults["egonet Nv number of links"]  = egonet_Nv.numberOfEdges();
+        //integerResults["egonet Nv number of nodes"]  = egonet_Nv.numberOfNodes();
+
+        //integerResults["egonet Nu u Nv number of links"] = egonet_Nu_u_Nv.numberOfEdges();
+        //integerResults["egonet Nu u Nv number of nodes"]  = egonet_Nu_u_Nv.numberOfNodes();
+
+        //integerResults["egonet Nv u NNv number of links"] = egonet_Nv_u_NNv.numberOfEdges();
+        //integerResults["egonet Nv u NNv number of nodes"]  = egonet_Nv_u_NNv.numberOfNodes();
+        //integerResults["egonet Nu u NNu number of links"] = egonet_Nu_u_NNu.numberOfEdges();
+        //integerResults["egonet Nu u NNu number of nodes"]  = egonet_Nu_u_NNu.numberOfNodes();
+        //integerResults["egonet (NNu u Nv) u (Nu u NNv) number of links"] = egonet_NNuNv_u_NuNNv.numberOfEdges();
+        //integerResults["egonet (NNu u Nv) u (Nu u NNv) number of nodes"] = egonet_NNuNv_u_NuNNv.numberOfNodes();
+        //integerResults["egonet (NNu u Nv) n (Nu u NNv) number of links"] = egonet_NNuNv_n_NuNNv.numberOfEdges();
+        //integerResults["egonet (NNu u Nv) n (Nu u NNv) number of nodes"] = egonet_NNuNv_n_NuNNv.numberOfNodes();
+
+        //integerResults["egonet Nu u Nv maxsize"] = bNu.size() * bNv.size();
+        //integerResults["egonet Nv u NNv maxsize"] = bNv.size() * bNNv.size();
+        //integerResults["egonet Nu u NNu maxsize"] = bNu.size() * bNNu.size();
+        //integerResults["egonet (NNu u Nv) u (Nu u NNv) maxsize"] = bNu_u_bNNv.size() * bNNu_u_bNv.size();
+        //integerResults["egonet (NNu u Nv) n (Nu u NNv) maxsize"] =  bNu_n_bNNv.size() * bNNu_n_bNv.size();
 
         // adamic adar
         doubleResults["adamic adar"] = adamic_adar(bNu_n_bNv);
@@ -517,9 +612,14 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
 
             }
         }
+    std::clock_t endcputime_Ok = std::clock();
+    double dur_Ok = (endcputime_Ok - startcputime_Ok) / (double)CLOCKS_PER_SEC; // time in seconds
+    doubleResults["Ok duration"] = dur_Ok;
 
     }
     if (use_global) { 
+        std::clock_t startcputime_Onm = std::clock();
+
         /************/
         /*components*/
         /************/
@@ -538,10 +638,14 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::unordered_set<node> component_u_nodes_with(all_components[components_with.componentOfNode(u_main)].begin(), 
                                                         all_components[components_with.componentOfNode(u_main)].end());
 
-        Graph link_component = GraphTools::subgraphFromNodes(history.main_graph, component_u_nodes_with);
+        //Graph link_component = GraphTools::subgraphFromNodes(history.main_graph, component_u_nodes_with);
 
-        integerResults["link component number of nodes"] = link_component.numberOfNodes();
-        integerResults["link component number of links"] = link_component.numberOfEdges();
+        integerResults["link component number of link"] = countLinks(history.main_graph, component_u_nodes_with, history.main_bound);
+        integerResults["link component number of nodes"] = component_u_nodes_with.size() ;
+
+
+        //integerResults["link component number of nodes"] = link_component.numberOfNodes();
+        //integerResults["link component number of links"] = link_component.numberOfEdges();
         integerResults["number of components G"] = components_with.numberOfComponents();
         integerResults["size largest component G"] = max_size_component_with;
 
@@ -772,8 +876,8 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         integerResults["number of components G-"] = components_without.numberOfComponents();
         integerResults["size largest component G-"] = max_size_component_without;
 
-        integerResults["link component number of nodes"] = link_component.numberOfNodes();
-        integerResults["link component number of links"] = link_component.numberOfEdges();
+        //integerResults["link component number of nodes"] = link_component.numberOfNodes();
+        //integerResults["link component number of links"] = link_component.numberOfEdges();
 
         doubleResults["pagerank of u in G"] = pagerank_with.score(u_main);
         doubleResults["pagerank of v in G"] = pagerank_with.score(v_main);
@@ -1018,6 +1122,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             integerResults["u v in same community in G "+ std::to_string(idx)] = same_subset_uv_without[sorting_indexes_with[idx]];
             integerResults["number of nodes changing partition " + std::to_string(idx)] = N_nodes_same_subset[sorting_indexes_with[idx]]; 
         }
+        std::clock_t endcputime_Onm = std::clock();
+        double dur_Onm = (endcputime_Onm - startcputime_Onm) / (double)CLOCKS_PER_SEC; // time in seconds
+        doubleResults["non linear duration"] = dur_Onm;
 
     }
     //std::ofstream myfile;
