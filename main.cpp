@@ -345,6 +345,7 @@ int main(int argc, char* argv[]) {
         current_time.erase(std::remove(current_time.begin(), current_time.end(), '\n'), current_time.end());
 
         mylog << current_time << " overall runtime " << std::to_string(cpu_duration) <<"\n" ;
+        mylog << "sorted map max degree "<< hist_graph->ctx.deg_seq[0] << "\n";
         mylog.close();
     }
     return 0;

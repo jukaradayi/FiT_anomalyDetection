@@ -135,6 +135,9 @@ public:
     std::vector<Count> bot_weightedDegree_sequence;
     std::vector<Count> unpk_weightedDegree_sequence;
 
+    //constant time pour degree max
+    StreamGraphs::ConstantTimeMax ctx;
+
 
     HistoryGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N);
     ~HistoryGraph();

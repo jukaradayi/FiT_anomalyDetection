@@ -47,6 +47,9 @@ void HGraph::trimQueue(Time t) {
         main_weightedDegree_sequence[u0_main] -= 1;
         main_weightedDegree_sequence[v0_main] -= 1;
 
+        ctx.decreaseNodeDeg(u0_main);
+        ctx.decreaseNodeDeg(v0_main);
+
         // remove edge when needed
         if (counter[e0] == 0 && main_graph.hasEdge(u0_main, v0_main)) { // TODO virer check hasEdge
 
@@ -67,7 +70,7 @@ void HGraph::trimQueue(Time t) {
                 }
             }
             main_graph.removeEdge(u0_main, v0_main);
-            decreaseMainDegree(u0_main, v0_main);
+            //decreaseMainDegree(u0_main, v0_main);
 
             if (main_graph.degree(u0_main) == 0) {
                 removeNode(i0.u, true);

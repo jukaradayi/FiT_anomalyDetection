@@ -365,6 +365,7 @@ void HistoryGraph::updateGraph(const Interaction i){
     } else {
         u_main = node2main[i.u]; 
     }
+    ctx.addNode(u_main);
 
     node v_main;
 
@@ -373,6 +374,7 @@ void HistoryGraph::updateGraph(const Interaction i){
     } else {
         v_main = node2main[i.v];
     }
+    ctx.addNode(v_main);
 
     // update weight counter
     ++counter[e];
@@ -381,9 +383,11 @@ void HistoryGraph::updateGraph(const Interaction i){
     queue.push(i);
     main_graph.increaseWeight(u_main, v_main, 1);
     //main_graph.max_weighted_degree(u_main, v_main);
+    ctx.increaseNodeDeg(u_main);
+    ctx.increaseNodeDeg(v_main);
 
     increaseTotalWeight();
-    increaseMainDegree(u_main, v_main, counter[e]); 
+    //increaseMainDegree(u_main, v_main, counter[e]);
 
     // update projection graph
     if (use_projection) {
