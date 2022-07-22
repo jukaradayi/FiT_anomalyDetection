@@ -25,6 +25,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include "sorted_degree.hpp"
 //#include <string_view>
 
 using namespace NetworKit;
