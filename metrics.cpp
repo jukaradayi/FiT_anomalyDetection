@@ -34,7 +34,7 @@
 
 namespace StreamGraphs {
 //using namespace StreamGraphs;
-using namespace NetworKit;
+//using namespace NetworKit;
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using std::chrono::duration;
@@ -72,33 +72,37 @@ Metrics::~Metrics() {}
 //        }
 //    }
 //}
-int Metrics::countLinks(const NetworKit::Graph &G, const std::unordered_set<node> &nodes, int bound){
-    //std::unordered_set<node> visited_links;
-    int n_links = 0;
-    for (auto it= nodes.begin(); it != nodes.end(); ++it) {
-        //node u = nodes[i];
-        node u = *it;
-        for (NetworKit::Graph::NeighborIterator bN = G.neighborRange(u).begin();
-               bN != G.neighborRange(u).end(); ++bN) { 
-            node n = *bN;
-            if (G.degree(n) >= bound) { // not needed because already sorted :)
-                continue;
-            }
-            if (std::find(nodes.begin(), nodes.end(), n) != nodes.end()) {
-                if (n > u) { // count links only once
-                    n_links += 1;
-                } else {
+//int Metrics::countLinks(const NetworKit::Graph &G, const std::unordered_set<node> &nodes, int bound){
+int Metrics::countLinks(const HashGraph &G, const std::unordered_set<node> &nodes, int bound){
+
+        //std::unordered_set<node> visited_links;
+        int n_links = 0;
+        for (auto it= nodes.begin(); it != nodes.end(); ++it) {
+            //node u = nodes[i];
+            node u = *it;
+            for (HashGraph::NeighborIterator bN = G.neighborRange(u).begin();
+            bN != G.neighborRange(u).end(); ++bN) {
+                node n = *bN;
+                if (G.degree(n) >= bound) { // not needed because already sorted :)
                     continue;
+                }
+                if (std::find(nodes.begin(), nodes.end(), n) != nodes.end()) {
+                    if (n > u) { // count links only once
+                        n_links += 1;
+                    } else {
+                        continue;
+                    }
+
                 }
 
             }
-        
         }
+        return n_links;
     }
-    return n_links;
 }
 
-std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, const node u, const node v) {
+std::pair<double, double> Metrics::localClustering(const HashGraph& G, const node u, const node v) {
+//std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, const node u, const node v) {
     count z = G.upperNodeIdBound();
     std::vector<double> scoreData;
     scoreData.clear();
@@ -159,7 +163,7 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
 
         //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
         //    bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
-        for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
+        for (HashGraph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
              bN != history.main_graph.neighborRange(u_node).end(); ++bN) {
 
                 //node nn_main = *bNN;
@@ -178,7 +182,7 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
         //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
         //    bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
         //        node n = *bN;
-         for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
+         for (HashGraph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
              bN != history.main_graph.neighborRange(u_node).end(); ++bN) {
 
                 //node nn_main = *bNN;
@@ -209,7 +213,7 @@ std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, co
             //G.forEdgesOf(u, [&](node, node v) {
             //for (BoundedNeighborIterator bN = BoundedNeighborRange(history.main_graph, u_node, history.main_bound).begin();
             //    bN != BoundedNeighborRange(history.main_graph, u_node, history.main_bound).end(); ++bN) {
-            for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
+            for (HashGraph::NeighborIterator bN = history.main_graph.neighborRange(u_node).begin();
                  bN != history.main_graph.neighborRange(u_node).end(); ++bN) {
 
                     //node nn_main = *bNN;
@@ -372,7 +376,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::unordered_set<node> bNu_n_bNv;
 
         //// fill sets
-        for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(u_main).begin();
+        for (HashGraph::NeighborIterator bN = history.main_graph.neighborRange(u_main).begin();
                 bN != history.main_graph.neighborRange(u_main).end(); ++bN) { 
             node n_main = *bN;
 
@@ -389,7 +393,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             bNu_u_bNNv.insert(n_main);
             bNu_u_bNNu.insert(n_main);
 
-            for (NetworKit::Graph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
+            for (HashGraph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
                  bNN != history.main_graph.neighborRange(n_main).end(); ++bNN) {
 
                 node nn_main = *bNN;
@@ -406,7 +410,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             }
         }
 
-        for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(v_main).begin();
+        for (HashGraph::NeighborIterator bN = history.main_graph.neighborRange(v_main).begin();
                 bN != history.main_graph.neighborRange(v_main).end(); ++bN) {
 
             node n_main = *bN;
@@ -432,7 +436,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             //for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
             //    bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
             //    node nn_main = *bNN;
-            for (NetworKit::Graph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
+            for (HashGraph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
                  bNN != history.main_graph.neighborRange(n_main).end(); ++bNN) {
 
                 //node nn_main = *bNN;

@@ -18,6 +18,7 @@
 
 #include <networkit/graph/Graph.hpp>
 #include <networkit/Globals.hpp>
+#include "hash_graph.hpp"
 
 #include <limits>
 #include <utility>
@@ -27,7 +28,7 @@
 #include <cmath>
 
 
-using namespace NetworKit;
+//using namespace NetworKit;
 //using namespace StreamGraphs;
 namespace StreamGraphs {
 
@@ -123,9 +124,11 @@ public:
         return history.getTotalWeight();
     };
 
-    std::pair<double, double> localClustering(const NetworKit::Graph& G, const node u, const node v);
+    //std::pair<double, double> localClustering(const NetworKit::Graph& G, const node u, const node v);
+    std::pair<double, double> localClustering(const HashGraph& G, const node u, const node v);
 
-    int countLinks(const NetworKit::Graph& G, const std::unordered_set<node>& nodes, int bound);
+    //int countLinks(const NetworKit::Graph& G, const std::unordered_set<node>& nodes, int bound);
+    int countLinks(const HashGraph& G, const std::unordered_set<node>& nodes, int bound);
 
     //double weight_concentration();
     //double difference_to_average_weight();

@@ -233,11 +233,11 @@ int main(int argc, char* argv[]) {
         std::string graph_type = (graph_idx < G_index) ? "H" : "G";
 
         // init NK graphs
-        NetworKit::Graph main_graph(0, true, false);
-        NetworKit::Graph top_graph(0, true, false);
-        NetworKit::Graph bot_graph;
+        HashGraph main_graph(0, true, false);
+        HashGraph top_graph(0, true, false);
+        HashGraph bot_graph(0, true, false);
         if (is_bip) {
-            bot_graph = NetworKit::Graph(0, true, false);
+            bot_graph = HashGraph(0, true, false);
         } else {
             bot_graph = top_graph;
         }

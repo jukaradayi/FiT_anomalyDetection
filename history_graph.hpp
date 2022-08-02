@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include "sorted_degree.hpp"
+#include "hash_graph.hpp"
 //#include <string_view>
 
 using namespace NetworKit;
@@ -74,11 +75,14 @@ namespace StreamGraphs {
 class HistoryGraph { // TODO check who is private or public
 public:
     // main graph
-    NetworKit::Graph& main_graph;// = NetworKit::Graph(0,true,false);
+    HashGraph& main_graph;
+    //NetworKit::Graph& main_graph;// = NetworKit::Graph(0,true,false);
 
     // projection graph
-    NetworKit::Graph& top_graph ;//= NetworKit::Graph(0,true,false);
-    NetworKit::Graph& bot_graph ;//= NetworKit::Graph(0,true,false);
+    HashGraph& top_graph ;
+    HashGraph& bot_graph ;
+    //NetworKit::Graph& top_graph ;//= NetworKit::Graph(0,true,false);
+    //NetworKit::Graph& bot_graph ;//= NetworKit::Graph(0,true,false);
 
     // unpacked graph
     //NetworKit::Graph& unpk_graph;// = NetworKit::Graph(0,true,false);
@@ -139,8 +143,8 @@ public:
     //constant time pour degree max
     StreamGraphs::ConstantTimeMax ctx;
 
-
-    HistoryGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N);
+    HistoryGraph(HashGraph& main_graph, HashGraph& top_graph, HashGraph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N);
+   //HistoryGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, const bool use_projection, const bool use_unpacked, const bool is_bipartite, const Bound main_bound, const Bound proj_bound, Count N);
     ~HistoryGraph();
     //void HistoryGraph::restoreNode(node u);
 
@@ -150,7 +154,8 @@ public:
 
     void removeNode(const node _u, const bool is_top);
 
-    void removeEdgeProjection(NetworKit::Graph& proj_graph,const node node_main,const node proj_node,const bool is_top);
+    void removeEdgeProjection(HashGraph& proj_graph,const node node_main,const node proj_node,const bool is_top);
+    //void removeEdgeProjection(NetworKit::Graph& proj_graph,const node node_main,const node proj_node,const bool is_top);
 
 
     void addEdgeProjection(const node node_main,const node proj_node,const bool is_top);
@@ -165,7 +170,9 @@ public:
 
     // bounded iterator
     template <typename L>
-    void forBoundedNeighbors(NetworKit::Graph& graph, node u, L handle) const;
+    //void forBoundedNeighbors(NetworKit::Graph& graph, node u, L handle) const;
+    void forBoundedNeighbors(HashGraph& graph, node u, L handle) const;
+
 
 private:
     Count total_weight = 0;
@@ -176,8 +183,10 @@ private:
 };
 
 template <typename L>
-void HistoryGraph::forBoundedNeighbors(NetworKit::Graph& graph, node u, L handle) const {
-    for (NetworKit::Graph::NeighborIterator bN = graph.neighborRange(u).begin();
+void HistoryGraph::forBoundedNeighbors(HashGraph& graph, node u, L handle) const {
+
+    //for (NetworKit::Graph::NeighborIterator bN = graph.neighborRange(u).begin();
+    for (HashGraph::NeighborIterator bN = graph.neighborRange(u).begin();
                 bN != graph.neighborRange(u).end(); ++bN) {
         if (graph.degree(*bN) < main_bound) {
             handle(*bN);

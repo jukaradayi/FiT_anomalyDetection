@@ -11,7 +11,7 @@
 namespace StreamGraphs {
 using namespace StreamGraphs;
 /** constructors **/
-GGraph::GGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, bool use_projection, bool use_unpacked, bool is_bipartite, Bound main_bound, Bound proj_bound, Count N, Bound window) : HistoryGraph(main_graph, top_graph, bot_graph,  use_projection, use_unpacked, is_bipartite, main_bound, proj_bound, N), window(window) {}
+GGraph::GGraph(HashGraph& main_graph, HashGraph& top_graph, HashGraph& bot_graph, bool use_projection, bool use_unpacked, bool is_bipartite, Bound main_bound, Bound proj_bound, Count N, Bound window) : HistoryGraph(main_graph, top_graph, bot_graph,  use_projection, use_unpacked, is_bipartite, main_bound, proj_bound, N), window(window) {}
 
 GGraph::~GGraph() {}
 

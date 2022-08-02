@@ -18,7 +18,9 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include "hash_graph.hpp"
 #include "history_graph.hpp"
+#include "sorted_degree.hpp"
 
 using namespace NetworKit;
 //using namespace StreamGraphs;
@@ -30,7 +32,7 @@ class GGraph final : public HistoryGraph {
     // constructor & destructor
 
 public:
-    GGraph(NetworKit::Graph& main_graph, NetworKit::Graph& top_graph, NetworKit::Graph& bot_graph, bool use_projection, bool use_unpacked, bool is_bipartite, Bound main_bound, Bound proj_bound, Count N, Bound window); 
+    GGraph(HashGraph& main_graph, HashGraph& top_graph, HashGraph& bot_graph, bool use_projection, bool use_unpacked, bool is_bipartite, Bound main_bound, Bound proj_bound, Count N, Bound window);
 
 
     ~GGraph();

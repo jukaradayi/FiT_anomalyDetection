@@ -12,6 +12,7 @@
 
 #include <networkit/graph/Graph.hpp>
 #include <networkit/Globals.hpp>
+//#include "hash_graph.hpp"
 
 #include <limits>
 #include <utility>
@@ -67,6 +68,14 @@ struct Edge {
            return false;
        }
     }
+    bool operator ==( const Edge &rhs ) const
+    {
+        if (u == rhs.u && v == rhs.v ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 inline void us_isect(std::unordered_set<node> &out,
         const std::unordered_set<node> &in1,
@@ -84,133 +93,40 @@ inline void us_isect(std::unordered_set<node> &out,
     }
 };
 
-/*****************************/
-/* Bounded neighbor iterator */
-/*****************************/
-class BoundedNeighborIterator { // deprecated, use forBoundedNodes 
-    const NetworKit::Graph *G;
-    const Bound bound = 0;
+}
 
+namespace std{
 
-    //std::vector<node>::const_iterator nIter;
-    NetworKit::Graph::NeighborIterator nIter;
-    NetworKit::Graph::NeighborIterator end;
-    node u;
+    template <>
+    struct hash<std::pair<uint64_t, uint64_t>>
+    {
+        std::size_t operator()(const std::pair<node, node>& k) const
+        {
+            using std::size_t;
+            using std::hash;
 
-public:
-    // The value type of the neighbors (i.e. nodes). Returned by
-    // operator*().
-    using value_type = node;
+            // Compute individual hash values for first,
+            // second and third and combine them using XOR
+            // and bit shifting:
 
-    // Reference to the value_type, required by STL.
-    using reference = value_type &;
-
-    // Pointer to the value_type, required by STL.
-    using pointer = value_type *;
-
-    // STL iterator category.
-    using iterator_category = std::forward_iterator_tag;
-
-    // Signed integer type of the result of subtracting two pointers,
-    // required by STL.
-    using difference_type = ptrdiff_t;
-
-    // Own type.
-    using self = BoundedNeighborIterator;
-
-    //BoundedNeighborIterator(std::vector<node>::const_iterator nodesIter, Bound bound) : nIter(nodesIter), bound(bound) {}
-    BoundedNeighborIterator(const NetworKit::Graph &G, NetworKit::Graph::NeighborIterator neighborsIter, Bound bound, NetworKit::Graph::NeighborIterator end, node u) : G(&G), nIter(neighborsIter), bound(bound), end(end) , u(u){}
-
-    /**
-     * @brief WARNING: This contructor is required for Python and should not be used as the
-     * iterator is not initialized.
-     */
-    BoundedNeighborIterator() {}
-
-    BoundedNeighborIterator operator++() {
-        //const auto tmp = *this;
-        if (nIter == end) {
-            //std::cout << "returning end \n";
-            return *this;
+            return hash<uint64_t>()(k.first) ^ hash<uint64_t>()(k.second) ;
         }
-        
-        do {
-            ++nIter;
-        } while ( nIter != end && G->degree(*nIter) > bound);
+    };
+    template <>
+    struct hash<StreamGraphs::Edge>
+    {
+        std::size_t operator()(const StreamGraphs::Edge& k) const
+        {
+            using std::size_t;
+            using std::hash;
 
-        return *this;
-    }
+            // Compute individual hash values for first,
+            // second and third and combine them using XOR
+            // and bit shifting:
 
-    BoundedNeighborIterator operator++(int) {
-
-        const auto tmp = *this;
-        if (nIter == end) {
-            return *this;
+            return hash<uint64_t>()(k.u) ^ hash<uint64_t>()(k.v) ;
         }
-        
-        do {
-            ++nIter;
-        } while ( nIter != end && G->degree(*nIter) > bound);
-        return tmp;
-
-
-    }
-
-    //BoundedNeighborIterator operator--() {
-    //    const auto tmp = *this;
-    //    while (G->hasNode(*--nIter) && G->degree(*--nIter) > bound) {}
-    //    //--nIter;
-    //    return tmp;
-    //}
-
-    //BoundedNeighborIterator operator--(int) {
-    //    while (G->hasNode(*--nIter) && G->degree(*--nIter) > bound) {}
-    //    //--nIter;
-    //    return *this;
-    //}
-
-    bool operator==(const BoundedNeighborIterator &rhs) const { return nIter == rhs.nIter; }
-
-    bool operator!=(const BoundedNeighborIterator &rhs) const { return !(nIter == rhs.nIter); }
-
-    //bool operator!=(const NetworKit::Graph::NeighborIterator &rhs) const { return !(nIter == rhs.nIter); }
-
-    node operator*() const { return *nIter; }
-};
-
-class BoundedNeighborRange {
-    const NetworKit::Graph *G;
-    const Bound bound = 0;
-    node u;
-
-public:
-    BoundedNeighborRange(const Graph &G, node u, Bound bound) : G(&G), u(u), bound(bound) { assert(G.hasNode(u)); };
-
-    BoundedNeighborRange() : G(nullptr){};
-
-    BoundedNeighborIterator begin() const {
-        assert(G);
-        //NetworKit::Graph::NeighborRange<false>  neighborRange = G->NeighborRange(u);
-        //std::vector<node> uNeighbors(G->neighborRange(u).begin(), G->neighborRange(u).end());
-        return BoundedNeighborIterator(*G, G->neighborRange(u).begin(), bound, G->neighborRange(u).end(), u);
-        //return BoundedNeighborIterator(uNeighbors.begin(), bound);
-
-    }
-
-    BoundedNeighborIterator end() const {
-    //NetworKit::Graph::NeighborIterator end() const {
-
-        assert(G);
-        //NetworKit::Graph::NeighborRange<false>  neighborRange = G->NeighborRange(u);
-
-        return BoundedNeighborIterator(*G, G->neighborRange(u).end(), bound, G->neighborRange(u).end(), u);
-
-    }
-};
-
-
-
-
+    };
 
 }
 
