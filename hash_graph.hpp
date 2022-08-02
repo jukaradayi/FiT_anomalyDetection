@@ -291,7 +291,7 @@ public:
     ~HashGraph();
 
 // comparer le temps
-    Count degree(node u) const;
+    Count degree(const node u) const;
 
     Count degree(node u);
 
@@ -322,7 +322,6 @@ public:
     Count weight(node u,node v);
 
     //void neighborRange();
-    forEdgesOf
 
     bool hasNode(node v) const noexcept { return (v < z) && this->exists[v]; }
 

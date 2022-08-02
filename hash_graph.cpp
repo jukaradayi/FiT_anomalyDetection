@@ -99,7 +99,7 @@ namespace StreamGraphs {
     }
 
     // number of nodes
-    Count HashGraph::degree(node u) const{
+    Count HashGraph::degree(const node u) const{
         if(HashGraph::Neighbors.find(u)!=HashGraph::Neighbors.end()){
             return HashGraph::Neighbors.at(u).size();
         }
