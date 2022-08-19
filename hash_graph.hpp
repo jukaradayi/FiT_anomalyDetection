@@ -28,6 +28,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <functional>
 #include <vector>
 #include <unordered_map>
 #include <tsl/robin_map.h>
@@ -63,8 +64,111 @@ public:
     Count N_nodes;
     //current upper bound of node ids, z will be the id of the next node
     node z;
+    // number of edges
+    Count N_edges;
     //NetworKit::Graph g;
     std::vector<bool> exists;
+
+    class NodeIterator {
+
+            const HashGraph *G;
+            node u;
+
+        public:
+            // The value type of the nodes (i.e. nodes). Returned by
+            // operator*().
+            using value_type = node;
+
+            // Reference to the value_type, required by STL.
+            using reference = value_type &;
+
+            // Pointer to the value_type, required by STL.
+            using pointer = value_type *;
+
+            // STL iterator category.
+            using iterator_category = std::forward_iterator_tag;
+
+            // Signed integer type of the result of subtracting two pointers,
+            // required by STL.
+            using difference_type = ptrdiff_t;
+
+            // Own type.
+            using self = NodeIterator;
+
+            NodeIterator(const HashGraph *G, node u) : G(G), u(u) {
+                if (!G->hasNode(u) && u < G->upperNodeIdBound()) {
+                    ++(*this);
+                }
+            }
+
+            /**
+             * @brief WARNING: This constructor is required for Python and should not be used as the
+             * iterator is not initialized.
+             */
+            NodeIterator() : G(nullptr) {}
+
+            ~NodeIterator() = default;
+
+            NodeIterator &operator++() {
+                assert(u < G->upperNodeIdBound());
+                do {
+                    ++u;
+                } while (!(G->hasNode(u) || u >= G->upperNodeIdBound()));
+                return *this;
+            }
+
+            NodeIterator operator++(int) {
+                const auto tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            NodeIterator operator--() {
+                assert(u);
+                do {
+                    --u;
+                } while (!G->hasNode(u));
+                return *this;
+            }
+
+            NodeIterator operator--(int) {
+                const auto tmp = *this;
+                --(*this);
+                return tmp;
+            }
+
+            bool operator==(const NodeIterator &rhs) const noexcept { return u == rhs.u; }
+
+            bool operator!=(const NodeIterator &rhs) const noexcept { return !(*this == rhs); }
+
+            node operator*() const noexcept {
+                assert(u < G->upperNodeIdBound());
+                return u;
+            }
+        };
+
+
+        class NodeRange {
+
+            const HashGraph *G;
+
+        public:
+            NodeRange(const HashGraph &G) : G(&G) {}
+
+            NodeRange() : G(nullptr){};
+
+            ~NodeRange() = default;
+
+            NodeIterator begin() const noexcept {
+                assert(G);
+                return NodeIterator(G, node{0});
+            }
+
+            NodeIterator end() const noexcept {
+                assert(G);
+                return NodeIterator(G, G->upperNodeIdBound());
+            }
+    };
 
     class NeighborIterator {
 
@@ -148,9 +252,9 @@ public:
 
             NeighborIterator end() const {
                 assert(G);
-                //return NeighborIterator(G->Neighbors.at(u).end());
-                std::vector<node>::const_iterator nodesIter;
-                return nodesIter;
+                return NeighborIterator(G->Neighbors.at(u).end());
+                //std::vector<node>::const_iterator nodesIter;
+                //return nodesIter;
             }
 
         };
@@ -301,7 +405,7 @@ public:
 
     node addNode();
 
-    void addEdge(node u, node v, int weight);
+    void addEdge(node u, node v);
 
     void restoreNode(node u);
 
@@ -315,18 +419,52 @@ public:
 
     index upperNodeIdBound();
 
+    index upperNodeIdBound() const;
+
+    template <typename L>
+    void balancedParallelForNodes(L handle) const;
+
+    template <typename L>
+    void forEdgesOf(node u, L handle) const;
+
+    template <bool graphIsDirected, bool hasWeights, bool graphHasEdgeIds, typename L>
+    inline void forOutEdgesOfImpl(node u, L handle) const;
+
+
+    NodeRange nodeRange() const noexcept { return NodeRange(*this); }
+
     //end of comparer
 
     int numberOfNodes();
+    int numberOfEdges();
+    int numberOfEdges() const;
 
     Count weight(node u,node v);
+
+    bool isDirected(){ return is_directed;}
+
+    bool isDirected()const{ return is_directed;}
+
+    bool isWeighted(){ return is_weighted;}
+    bool isWeighted()const{ return is_weighted;}
 
     //void neighborRange();
 
     bool hasNode(node v) const noexcept { return (v < z) && this->exists[v]; }
 
-
     HashGraph::NeighborRange neighborRange(node u)  const;
+
+    template <class F,
+                typename std::enable_if<
+                        (Aux::FunctionTraits<F>::arity >= 3)
+                        && std::is_same<edgeweight,
+                                typename Aux::FunctionTraits<F>::template arg<2>::type>::value
+                        && std::is_same<edgeid, typename Aux::FunctionTraits<F>::template arg<3>::type>::
+                        value>::type * = (void *)0>
+                                auto edgeLambda(F &f, node u, node v, edgeweight ew, edgeid id) const
+        -> decltype(f(u, v, ew, id)) {
+            return f(u, v, ew, id);
+        }
 
 
 

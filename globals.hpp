@@ -29,6 +29,8 @@ namespace StreamGraphs {
 using Time = uint64_t; // for timestamps
 using Bound = uint64_t; // for limits
 using Count = uint64_t; // for degree, number of things etc...
+using edgeweight = uint64_t;
+using edgeid = uint64_t;
 
 constexpr int none = std::numeric_limits<uint64_t>::max(); // like in networkit, for nodes not presents
 

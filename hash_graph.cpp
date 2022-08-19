@@ -5,6 +5,7 @@
 #include "hash_graph.hpp"
 #include "globals.hpp"
 #include <limits>
+#include <functional>
 //#include <boost>
 #include <utility>
 #include <cstdint>
@@ -34,12 +35,13 @@ namespace StreamGraphs {
     exists(N_nodes, true),
     is_weighted(is_weighted),
     z(N_nodes),
-    is_directed(is_weighted)
+    N_edges(0),
+    is_directed(is_directed)
     {}
 
     HashGraph::~HashGraph(){}
 
-    void  HashGraph::addEdge(node u, node v, int weight){
+    void  HashGraph::addEdge(node u, node v){
         const Edge edge = Edge(u,v);
         const Edge edge2 = Edge(v,u);
         // verifier le node u exist ou pas
@@ -60,39 +62,15 @@ namespace StreamGraphs {
             HashGraph::Neighbors.at(v).emplace_back(u);
             HashGraph::Edges.emplace(edge,indice_u);
             HashGraph::Edges.emplace(edge2,indice_v);
+            N_edges++;
         }
-        else{
-            HashGraph::Edges_weights[edge] += weight;
-            HashGraph::Edges_weights[edge2] += weight;
-        }
-
-        /*
-        int indice_u  = 0;
-        for(int i= 0; i<HashGraph::Neighbors.at(u).size();i++){
-            if(HashGraph::Neighbors.at(u).at(i)==v){
-                indice_u = i;
-                break;
-            }
-        }
-
-        if(indice_u == HashGraph::Neighbors.at(u).size()) HashGraph::Neighbors.at(u).emplace_back(v);
-
-        int indice_v  = 0;
-        for(int i= 0; i<HashGraph::Neighbors.at(v).size();i++){
-            if(HashGraph::Neighbors.at(v).at(i)==u){
-                indice_v = i;
-                break;
-            }
-        }
-        if(indice_v == HashGraph::Neighbors.at(v).size()) HashGraph::Neighbors.at(v).emplace_back(u);
-        */
 
         //ajouter sur weightEdge
         if(HashGraph::Edges_weights.find(edge)==HashGraph::Edges_weights.end()){
-            HashGraph::Edges_weights.emplace(edge,weight);
+            HashGraph::Edges_weights.emplace(edge,1);
         }
         if(HashGraph::Edges_weights.find(edge2)==HashGraph::Edges_weights.end()){
-            HashGraph::Edges_weights.emplace(edge2,weight);
+            HashGraph::Edges_weights.emplace(edge2,1);
         }
 
         //HashGraph::Edges_weights.at(edge) = weight;
@@ -131,7 +109,7 @@ namespace StreamGraphs {
             HashGraph::Edges_weights[edge] += weight;
         }
         else{
-            HashGraph::addEdge(u, v, 0);
+            HashGraph::addEdge(u, v);
             HashGraph::Edges_weights[edge] += weight;
         }
         //
@@ -194,7 +172,16 @@ namespace StreamGraphs {
     int HashGraph::numberOfNodes(){
         return N_nodes;
     }
+    int HashGraph::numberOfEdges(){
+        return N_edges;
+    }
+    int HashGraph::numberOfEdges() const{
+        return N_edges;
+    }
     index HashGraph::upperNodeIdBound(){
+        return z;
+    }
+    index HashGraph::upperNodeIdBound() const{
         return z;
     }
 
@@ -207,6 +194,37 @@ namespace StreamGraphs {
         const Edge edge = Edge(u,v);
         return Edges_weights.at(edge);
     }
+
+    template <typename L>
+    void HashGraph::balancedParallelForNodes(L handle) const {
+    // TODO: define min block size (and test it!)
+    #pragma omp parallel for schedule(guided)
+        for (omp_index v = 0; v < static_cast<omp_index>(z); ++v) {
+            if (exists[v]) {
+                handle(v);
+            }
+        }
+    }
+
+    template <typename L>
+    void HashGraph::forEdgesOf(node u, L handle) const {
+                //bool weigthed = 1; edgesIndexed = 0
+                forOutEdgesOfImpl<true, true, false, L>(u, handle);
+    }
+
+    template <bool graphIsDirected, bool hasWeights, bool graphHasEdgeIds, typename L>
+    inline void HashGraph::forOutEdgesOfImpl(node u, L handle) const {
+        //for (HashGraph::NeighborIterator uN = history.main_graph.neighborRange(u).begin();
+            // uN != history.main_graph.neighborRange(u).end(); ++uN){
+        for (index i = 0; i < HashGraph::Neighbors.at(u).size(); ++i) {
+            node v = HashGraph::Neighbors.at(u).at(i);
+            const Edge edge = Edge(u,v);
+            edgeweight  res = HashGraph::Edges_weights.at(edge);
+            edgeLambda<L>(handle, u, v, res, none);
+
+        }
+    }
+
 
 
 

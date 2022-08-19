@@ -28,7 +28,7 @@
 #include <cmath>
 
 
-//using namespace NetworKit;
+using namespace NetworKit;
 //using namespace StreamGraphs;
 namespace StreamGraphs {
 

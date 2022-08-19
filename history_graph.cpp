@@ -6,6 +6,7 @@
 #include "history_graph.hpp"
 #include <networkit/graph/Graph.hpp>
 #include <unordered_set>
+#include "sorted_degree.hpp"
 //#include <boost/iterator/filter_iterator.hpp>
 namespace StreamGraphs {
 
@@ -42,6 +43,7 @@ HistoryGraph::HistoryGraph(HashGraph& main_graph, HashGraph& top_graph, HashGrap
     top_weightedDegree_sequence(N, 0),
     bot_weightedDegree_sequence(N, 0),
     unpk_weightedDegree_sequence(N, 0),
+    ctx(),
     N(N)
       {
           //this->node2main = new uint64_t[N] {none};
