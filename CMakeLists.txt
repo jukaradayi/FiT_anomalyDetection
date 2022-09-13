@@ -7,12 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 #link_directories(${CMAKE_BINARY_DIR})
 #
 #target_link_libraries(GLBall mylib)
+set(SOURCE_FILES fit/main.cpp)
 
+add_executable(fit.bin ${SOURCE_FILES})
+#add_executable(fit.bin fit/main.cpp)
 
-include_directories(
-    include
-    ) # add unit test directory ?
-
+#add_subdirectory(fit)
 #add_library( networkit SHARED IMPORTED )
 #set_target_properties( networkit PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/libnetworkit.so )
 #target_link_libraries(networkit networkit)
@@ -20,17 +20,23 @@ include_directories(
 
 
 #find_package(networkit REQUIRED)
-add_library(fit STATIC
+add_library(fit SHARED
    fit/G_graph.cpp
    fit/H_graph.cpp
    fit/PLM.cpp
    fit/history_graph.cpp
    fit/metrics.cpp
 )
+target_include_directories(fit PUBLIC
+    include
+    ) # add unit test directory ?
+
 link_directories(${CMAKE_BINARY_DIR})
 
-target_link_libraries(fit libnetworkit)
-
+target_link_libraries(fit libnetworkit.so)
+target_link_libraries (fit.bin PUBLIC
+    fit
+)
 #IF(TBB_FOUND AND SQLite3_FOUND)
 #	LINK_LIBRARIES(
 #		TBB::tbb
@@ -48,5 +54,7 @@ target_link_libraries(fit libnetworkit)
 
 # Commonly used optimization flags
 add_compile_options(-O3)
+target_link_options(${PROJECT_NAME} PUBLIC
+    "LINKER:-no-as-needed"
+)
 
-#add_executable(fit.bin fit/main.cpp)
