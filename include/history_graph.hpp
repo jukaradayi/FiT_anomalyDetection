@@ -1,9 +1,4 @@
 /*
- *  history_graph.hpp
- *
- *  created on: 14.09.2021
- *  authors: Nicolas Gensollen, Julien Karadayi, Matthieu Latapy
- *
  *  Implementation of dynamic history graphs.
  *  Given a "link stream" in input, with the following format:
  *    
@@ -127,7 +122,17 @@ public:
     ~HistoryGraph();
 
     /**
-     * Given a new interaction (t,u,v), add it to the main_graph, and update the top and bottom projections accordingly
+     * Given a new interaction (t,u,v), add it to the queue, and add the 
+     * edge (u,v) to the main_graph, and update the top and bottom projections accordingly.
+     *
+     * Note: when updating the projection graph top_graph (resp. bot_graph), if the degree of 
+     * the node v_0 in main_graph (resp. u_0) was previously d(v_0) == main_bound but is now 
+     * d(v_0) > main_bound (resp d(u_0) ), the influence of v_0 on top_graph 
+     * (resp u_0 on bot_graph) was taken into account but now is not anymore,
+     * so loop through each neighbor n of v_0 (resp u_0) in main_graph and 
+     * remove the edge (u_0, n) in top_graph (resp. (v_0, n) in bot_graph).
+     *
+
      * @brief Add a new interaction to the main graph and its projections.
      * 
      *

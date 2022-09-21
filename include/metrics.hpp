@@ -1,10 +1,10 @@
 /*
- *  metrics.hpp
- *
- *  created on: 14.09.2021
- *  authors: Nicolas Gensollen, Julien Karadayi, Matthieu Latapy
- *
- *
+ * Compute features on static graphs.
+ * Given a history graph H (resp. G) at a given interaction (t,u,v),
+ * compute a set of metrics and write the results in the output csv.
+ * The metrics are in three sets, each enabled by a boolean (use_basic, use_local and use_nonLinear). 
+ * use_basic enables basic graph features, that we compute in O(1) time, like the degree of u and v in main_graph, the weight of (u,v) in main_graph etc...
+ * use_local enables graph features computed in O(k) or O(k²) time, where k is the degree bound, which include the adamic adar coefficient, the Jaccard coefficient of u and v, the densities of various local neighborhoods of u and v (like N(u) \union N(v), N(N(u)) \union N(N(v)) etc...).
  */
 
 #ifndef STREAMGRAPHS_METRICS_HPP_
