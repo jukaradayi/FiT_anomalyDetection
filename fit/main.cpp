@@ -9,7 +9,7 @@
 #include "metrics.hpp"
 #include "csv.hpp"
 
-#include <omp.h>
+//#include <omp.h>
 #include <networkit/graph/Graph.hpp>
 #include <iterator>
 #include <chrono>
@@ -229,8 +229,8 @@ int main(int argc, char* argv[]) {
     file.close();
 
     // parallelize over window sizes // TODO check slower parallelization...
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(10)
+    //omp_set_dynamic(0);
+    //#pragma omp parallel for num_threads(10)
     for (int graph_idx = 0; graph_idx < hist_sizes.size(); ++graph_idx) {
         std::string graph_type = (graph_idx < G_index) ? "H" : "G";
 

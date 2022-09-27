@@ -3,9 +3,8 @@
 // 
 // Implementation of graphs bounded on the node degree
 
-#include <catch2/catch_test_macros.hpp> // TODO Make it optional
+//#include <catch2/catch_test_macros.hpp> // TODO Make it optional
 #include "csv.hpp"
-
 
 #include "history_graph.hpp"
 #include <networkit/graph/Graph.hpp>
@@ -83,8 +82,8 @@ node HistoryGraph::addNode(const node _u, const bool is_top) {
         main_graph.restoreNode(u);
     }
     node2main[_u] = u;
-
     main2node[u] = _u;
+    degree_counter.add_counter(u);
     if (use_projection) {
         // update projection -- Not update bot graph when main graph is not bipartite
         if ((is_top && removed_top.size() > 0) || (!is_top && !is_bipartite && removed_top.size() >0)) {
@@ -140,7 +139,7 @@ void HistoryGraph::removeNode(const node _u, const bool is_top) {
    node2main[_u] = none;
 
    main2node[u] = none;
-
+   degree_counter.remove_counter(u);
    // in projection : remove node and its neighbors
    if (use_projection && (is_top || !is_top && !is_bipartite)) {
        // remove node from top graph
@@ -384,6 +383,13 @@ void HistoryGraph::updateGraph(const Interaction i){
     // update queue and main graph
     queue.push(i);
     main_graph.increaseWeight(u_main, v_main, 1);
+    if (!main_graph.hasEdge(u_main, v_main)) {
+        degree_counter.increase_counter(u_main);
+        degree_counter.increase_counter(v_main);
+    }
+    if (main_graph.degree(u_main) != degree_counter.get_value(u_main)){
+        std::cout << "node u_main "<<u_main<<" main " << main_graph.degree(u_main) << " counter " << degree_counter.get_value(u_main) <<" \n";
+    }
     //main_graph.max_weighted_degree(u_main, v_main);
 
     increaseTotalWeight();
@@ -441,143 +447,143 @@ void HistoryGraph::updateGraph(const Interaction i){
 
 };
 
-TEST_CASE("simple graph", "[history_graph]") {
-
-    std::ifstream file("unit_clean"); /// using hand made dataset on which results were computed by hand to check
-
-    SECTION("Complete run through data" {
-    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
-    NetworKit::Graph main_graph(0, true, false);
-    NetworKit::Graph top_graph(0, true, false);
-    NetworKit::Graph bot_graph(0, true, false);
-
-    H5 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 5); //TODO correct size
-
-    for(auto& node_loop: CSVRange(file))
-    {
-        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
-        hist_graph->updateGraph(i); // update graph
-    }
-    }
-
-    SECTION("Check H queue size" {
-    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
-    NetworKit::Graph main_graph(0, true, false);
-    NetworKit::Graph top_graph(0, true, false);
-    NetworKit::Graph bot_graph(0, true, false);
-
-    H5 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 5); //TODO correct node set size
-    H10 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 10); //TODO correct node set size
-
-    int line_idx = 0
-    for(auto& node_loop: CSVRange(file))
-    {
-        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
-        line_idx += 1;
-        hist_graph->updateGraph(i); // update graph
-        if (line_idx >= 5) {
-            REQUIRE( hist_graph->queue.size() == 5);
-        }
-        if (line_idx >= 10) {
-            REQUIRE( hist_graph->queue.size() == 10);
-        }
-
-    }
-    }
-
-    SECTION("Check G queue size" {
-    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
-    NetworKit::Graph main_graph(0, true, false);
-    NetworKit::Graph top_graph(0, true, false);
-    NetworKit::Graph bot_graph(0, true, false);
-
-    G20 = new GGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 20); //TODO correct node set size
-
-    int line_idx = 0
-    for(auto& node_loop: CSVRange(file))
-    {
-        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
-
-        line_idx += 1;
-        hist_graph->updateGraph(i); // update graph
-        if (line_idx == 24) {
-//REQUIRE( hist_graph->queue.size() == 10);
-            node u_7 = node2main[7];
-            node u_14 = node2main[14];
-
-            REQUIRE(hist_graph->main_graph.degree(u_7) == 7);
-            REQUIRE(hist_graph->main_graph.degree(u_14) == 1);
-        }
-
-    }
-    }
-
-    SECTION("Check main_graph degree" {
-    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
-    NetworKit::Graph main_graph(0, true, false);
-    NetworKit::Graph top_graph(0, true, false);
-    NetworKit::Graph bot_graph(0, true, false);
-
-    H10 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 10); //TODO correct node set size
-
-    int line_idx = 0
-    for(auto& node_loop: CSVRange(file))
-    {
-        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
-
-        line_idx += 1;
-        hist_graph->updateGraph(i); // update graph
-        if (line_idx == 24) {
-//REQUIRE( hist_graph->queue.size() == 10);
-            node u_7 = node2main[7];
-            node u_14 = node2main[14];
-
-            REQUIRE(hist_graph->main_graph.degree(u_7) == 7);
-            REQUIRE(hist_graph->main_graph.degree(u_14) == 1);
-        }
-
-    }
-    }
-
-    SECTION("Check projections" {
-    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
-    NetworKit::Graph main_graph(0, true, false);
-    NetworKit::Graph top_graph(0, true, false);
-    NetworKit::Graph bot_graph(0, true, false);
-
-    H5 = new HGraph(main_graph, top_graph, bot_graph, true, false, true, 1000, 1000, 100, 5); //TODO correct node set size
-
-    int line_idx = 0
-    for(auto& node_loop: CSVRange(file))
-    {
-        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
-
-        line_idx += 1;
-        if (line_idx == 11) {
-            node u_8 = node2top[8];
-            node u_10 = node2top[10];
-            node u_6 = node2top[6];
-            node u_11 = node2top[11];
-            REQUIRE(hist_graph->top_graph.hasEdge(u_8, u_10));
-            REQUIRE(hist_graph->top_graph.hasEdge(u_6, u11));
-        }
-
-        hist_graph->updateGraph(i); // update graph
-        if (line_idx == 11) {
-            node u_8 = node2top[8];
-            node u_10 = node2top[10];
-            node u_6 = node2top[6];
-            node u_11 = node2top[11];
-            node u_13 = node2top[13];
-            REQUIRE(hist_graph->top_graph.hasEdge(u_8, u_10));
-            REQUIRE(!hist_graph->top_graph.hasEdge(u_6, u11));
-            REQUIRE(hist_graph->top_graph.hasEdge(u_8, u_13));
-            REQUIRE(hist_graph->top_graph.hasEdge(u_10, u_13));
-        }
-
-    }
-    }
-
-}
+//TEST_CASE("simple graph", "[history_graph]") {
+//
+//    std::ifstream file("unit_clean"); /// using hand made dataset on which results were computed by hand to check
+//
+//    SECTION("Complete run through data" {
+//    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
+//    NetworKit::Graph main_graph(0, true, false);
+//    NetworKit::Graph top_graph(0, true, false);
+//    NetworKit::Graph bot_graph(0, true, false);
+//
+//    H5 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 5); //TODO correct size
+//
+//    for(auto& node_loop: CSVRange(file))
+//    {
+//        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
+//        hist_graph->updateGraph(i); // update graph
+//    }
+//    }
+//
+//    SECTION("Check H queue size" {
+//    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
+//    NetworKit::Graph main_graph(0, true, false);
+//    NetworKit::Graph top_graph(0, true, false);
+//    NetworKit::Graph bot_graph(0, true, false);
+//
+//    H5 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 5); //TODO correct node set size
+//    H10 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 10); //TODO correct node set size
+//
+//    int line_idx = 0
+//    for(auto& node_loop: CSVRange(file))
+//    {
+//        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
+//        line_idx += 1;
+//        hist_graph->updateGraph(i); // update graph
+//        if (line_idx >= 5) {
+//            REQUIRE( hist_graph->queue.size() == 5);
+//        }
+//        if (line_idx >= 10) {
+//            REQUIRE( hist_graph->queue.size() == 10);
+//        }
+//
+//    }
+//    }
+//
+//    SECTION("Check G queue size" {
+//    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
+//    NetworKit::Graph main_graph(0, true, false);
+//    NetworKit::Graph top_graph(0, true, false);
+//    NetworKit::Graph bot_graph(0, true, false);
+//
+//    G20 = new GGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 20); //TODO correct node set size
+//
+//    int line_idx = 0
+//    for(auto& node_loop: CSVRange(file))
+//    {
+//        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
+//
+//        line_idx += 1;
+//        hist_graph->updateGraph(i); // update graph
+//        if (line_idx == 24) {
+////REQUIRE( hist_graph->queue.size() == 10);
+//            node u_7 = node2main[7];
+//            node u_14 = node2main[14];
+//
+//            REQUIRE(hist_graph->main_graph.degree(u_7) == 7);
+//            REQUIRE(hist_graph->main_graph.degree(u_14) == 1);
+//        }
+//
+//    }
+//    }
+//
+//    SECTION("Check main_graph degree" {
+//    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
+//    NetworKit::Graph main_graph(0, true, false);
+//    NetworKit::Graph top_graph(0, true, false);
+//    NetworKit::Graph bot_graph(0, true, false);
+//
+//    H10 = new HGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 10); //TODO correct node set size
+//
+//    int line_idx = 0
+//    for(auto& node_loop: CSVRange(file))
+//    {
+//        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
+//
+//        line_idx += 1;
+//        hist_graph->updateGraph(i); // update graph
+//        if (line_idx == 24) {
+////REQUIRE( hist_graph->queue.size() == 10);
+//            node u_7 = node2main[7];
+//            node u_14 = node2main[14];
+//
+//            REQUIRE(hist_graph->main_graph.degree(u_7) == 7);
+//            REQUIRE(hist_graph->main_graph.degree(u_14) == 1);
+//        }
+//
+//    }
+//    }
+//
+//    SECTION("Check projections" {
+//    Interaction i(std::stoi((node_loop)[0]), std::stoi((node_loop)[1]), std::stoi((node_loop)[2]));
+//    NetworKit::Graph main_graph(0, true, false);
+//    NetworKit::Graph top_graph(0, true, false);
+//    NetworKit::Graph bot_graph(0, true, false);
+//
+//    H5 = new HGraph(main_graph, top_graph, bot_graph, true, false, true, 1000, 1000, 100, 5); //TODO correct node set size
+//
+//    int line_idx = 0
+//    for(auto& node_loop: CSVRange(file))
+//    {
+//        Interaction i(std::stoi((*main_loop)[0]), std::stoi((*main_loop)[1]), std::stoi((*main_loop)[2]));
+//
+//        line_idx += 1;
+//        if (line_idx == 11) {
+//            node u_8 = node2top[8];
+//            node u_10 = node2top[10];
+//            node u_6 = node2top[6];
+//            node u_11 = node2top[11];
+//            REQUIRE(hist_graph->top_graph.hasEdge(u_8, u_10));
+//            REQUIRE(hist_graph->top_graph.hasEdge(u_6, u11));
+//        }
+//
+//        hist_graph->updateGraph(i); // update graph
+//        if (line_idx == 11) {
+//            node u_8 = node2top[8];
+//            node u_10 = node2top[10];
+//            node u_6 = node2top[6];
+//            node u_11 = node2top[11];
+//            node u_13 = node2top[13];
+//            REQUIRE(hist_graph->top_graph.hasEdge(u_8, u_10));
+//            REQUIRE(!hist_graph->top_graph.hasEdge(u_6, u11));
+//            REQUIRE(hist_graph->top_graph.hasEdge(u_8, u_13));
+//            REQUIRE(hist_graph->top_graph.hasEdge(u_10, u_13));
+//        }
+//
+//    }
+//    }
+//
+//}
 
 

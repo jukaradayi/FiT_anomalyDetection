@@ -26,6 +26,7 @@ add_library(fit SHARED
    fit/PLM.cpp
    fit/history_graph.cpp
    fit/metrics.cpp
+   fit/SortedCounter.cpp
 )
 target_include_directories(fit PUBLIC
     include
