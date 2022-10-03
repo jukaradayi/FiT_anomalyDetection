@@ -58,7 +58,7 @@ TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
     NetworKit::Graph top_graph(0, true, false);
     NetworKit::Graph bot_graph(0, true, false);
 
-    GGraph* G20 = new GGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 20); //TODO correct node set size
+    GGraph* G31 = new GGraph(main_graph, top_graph, bot_graph, false, false, true, 1000, 1000, 100, 31); //TODO correct node set size
 
     int line_idx = 0;
     for(auto& main_loop: CSVRange(file))
@@ -66,14 +66,14 @@ TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
         StreamGraphs::Interaction i(std::stoi((main_loop)[0]), std::stoi((main_loop)[1]), std::stoi((main_loop)[2]));
 
         line_idx += 1;
-        G20->updateGraph(i); // update graph
+        G31->updateGraph(i); // update graph
         if (line_idx == 24) {
-//REQUIRE( hist_graph->queue.size() == 10);
-            node u_7 = G20->node2main[7];
-            node u_14 = G20->node2main[14];
 
-            REQUIRE(G20->main_graph.degree(u_7) == 7);
-            REQUIRE(G20->main_graph.degree(u_14) == 1);
+//REQUIRE( hist_graph->queue.size() == 10);
+            node u_7 = G31->node2main[7];
+            node u_24 = G31->node2main[24];
+            REQUIRE(G31->main_graph.degree(u_7) == 7);
+            REQUIRE(G31->main_graph.degree(u_24) == 1);
         }
 
     }
@@ -97,10 +97,10 @@ TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
         if (line_idx == 24) {
 //REQUIRE( hist_graph->queue.size() == 10);
             node u_7 = H10->node2main[7];
-            node u_14 = H10->node2main[14];
+            node u_24 = H10->node2main[24];
 
             REQUIRE(H10->main_graph.degree(u_7) == 7);
-            REQUIRE(H10->main_graph.degree(u_14) == 1);
+            REQUIRE(H10->main_graph.degree(u_24) == 1);
         }
 
     }
