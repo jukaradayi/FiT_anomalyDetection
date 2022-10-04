@@ -1,4 +1,4 @@
-/*
+/**
  *  Implementation of dynamic history graphs.
  *  Given a "link stream" in input, with the following format:
  *    
@@ -22,6 +22,7 @@
 #include <networkit/graph/Graph.hpp>
 #include <networkit/Globals.hpp>
 
+#include "SortedCounter.hpp"
 #include "globals.hpp"
 #include <limits>
 //#include <boost>
@@ -91,6 +92,8 @@ public:
     std::vector<node> removed_top; ///< same as removed_main for top_graph
     std::vector<node> removed_bot; ///< same as removed_main for bot_graph
     std::vector<node> removed_unpk; //
+    
+    SortedCounters degree_counter;
 
     // degree distribution
     std::vector<Count> main_degree_distribution; ///< the degree distribution of the main graph

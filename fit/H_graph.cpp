@@ -49,8 +49,6 @@ void HGraph::trimQueue(Time t) {
 
         // remove edge when needed
         if (counter[e0] == 0 && main_graph.hasEdge(u0_main, v0_main)) { // TODO virer check hasEdge
-            degree_counter.decrease_counter(u0_main);
-            degree_counter.decrease_counter(v0_main);
 
             // remove edge in projection // TODO modulariser ce bout de code
 
@@ -101,11 +99,13 @@ void HGraph::trimQueue(Time t) {
 
                 }
             }
+            std::cout << " decreasing \n";
+            degree_counter.decrease_counter(u0_main);
+            degree_counter.decrease_counter(v0_main);
             main_graph.removeEdge(u0_main, v0_main);
+            //std::cout << "node u_main "<<u0_main<<" main " << main_graph.degree(u0_main) << " counter " << degree_counter.get_value(u0_main) <<" \n";
+
             decreaseMainDegree(u0_main, v0_main);
-            if (main_graph.degree(u0_main) != degree_counter.get_value(u0_main)){
-                std::cout << "node u_main "<<u0_main<<" main " << main_graph.degree(u0_main) << " counter " << degree_counter.get_value(u0_main) <<" \n";
-            }
 
             if (main_graph.degree(u0_main) == 0) {
                 removeNode(i0.u, true);
