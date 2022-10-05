@@ -99,7 +99,6 @@ void HGraph::trimQueue(Time t) {
 
                 }
             }
-            std::cout << " decreasing \n";
             degree_counter.decrease_counter(u0_main);
             degree_counter.decrease_counter(v0_main);
             main_graph.removeEdge(u0_main, v0_main);

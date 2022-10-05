@@ -298,7 +298,7 @@ int main(int argc, char* argv[]) {
             hist_graph->updateGraph(i);            // update graph
             std::clock_t t2_update = std::clock(); // end clock
             dur_update += (t2_update - t1_update) / (double)CLOCKS_PER_SEC; // time in seconds
-
+            std::cout << "\n";
             // start metrics at window size
             std::clock_t t1_metric = std::clock(); // start clock
             if ( (graph_type == "H" && line_number > hist_sizes[graph_idx]) 

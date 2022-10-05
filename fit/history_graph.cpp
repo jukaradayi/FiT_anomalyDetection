@@ -394,19 +394,6 @@ void HistoryGraph::updateGraph(const Interaction i){
     increaseTotalWeight();
     increaseMainDegree(u_main, v_main, counter[e]);
     
-    //std::cout << "increasing u_main v_main main " << main_graph.degree(u_main) << " counter " << degree_counter.get_value(u_main) <<" \n";
-    //std::cout << "increasing u_main v_main main " << main_graph.degree(v_main) << " counter " << degree_counter.get_value(v_main) <<" \n";
-    std::cout << " interaction " << i.t << " " << i.u << " " << i.v << "\n";
-    for (auto curnode=main_graph.nodeRange().begin(); curnode!=main_graph.nodeRange().end(); ++curnode) {
-        node mynode = *curnode;
-        if ( main_graph.degree(mynode)!= degree_counter.get_value(mynode) ) {
-            std::cout << "Bnode  "<<mynode<<" main " << main_graph.degree(mynode) << " counter " << degree_counter.get_value(mynode) <<" \n";
-        } else if ( main_graph.degree(mynode)== degree_counter.get_value(mynode) ) {
-            std::cout << "node  "<<mynode<<" main " << main_graph.degree(mynode) << " counter " << degree_counter.get_value(mynode) <<" \n";
-        }
-
-    }
-
     // update projection graph
     if (use_projection) {
         node u_top = node2top[i.u];

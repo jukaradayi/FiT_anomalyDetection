@@ -145,6 +145,31 @@ TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
     }
     }
 
+    SECTION("Check Sorted Counters"){
+    
+        
+    NetworKit::Graph main_graph(0, true, false);
+    NetworKit::Graph top_graph(0, true, false);
+    NetworKit::Graph bot_graph(0, true, false);
+
+    HGraph* H5 = new HGraph(main_graph, top_graph, bot_graph, true, false, true, 1000, 1000, 100, 5); //TODO correct node set size
+
+    int line_idx = 0;
+    for(auto& main_loop: CSVRange(file))
+    {
+        StreamGraphs::Interaction i(std::stoi((main_loop)[0]), std::stoi((main_loop)[1]), std::stoi((main_loop)[2]));
+
+        for (auto main_node=H5->main_graph.nodeRange().begin(); main_node!=H5->main_graph.nodeRange().end(); ++main_node) {
+            node mynode = *main_node;
+            REQUIRE(H5->main_graph.degree(mynode) == H5->degree_counter.get_value(mynode));
+
+        }
+
+    }       
+        
+
+    }
+
 }
 
 
