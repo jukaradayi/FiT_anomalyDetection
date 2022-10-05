@@ -87,6 +87,23 @@ struct Edge {
            return false;
        }
     }
+    bool operator ==( const Edge &rhs ) const
+    {
+       if (u == rhs.u && v == rhs.v) {
+            return true;
+       } else {
+           return false;
+       } 
+    }
+    bool operator !=( const Edge &rhs ) const
+    {
+       if (u != rhs.u || v != rhs.v) {
+            return true;
+       } else {
+           return false;
+       } 
+    }
+
 };
 
 /** Given two sets of nodes (stored as std::unordered_set<node>), build the

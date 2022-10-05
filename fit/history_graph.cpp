@@ -379,6 +379,7 @@ void HistoryGraph::updateGraph(const Interaction i){
     } else {
         v_main = node2main[i.v];
     }
+    Edge e_main(u_main, v_main);
 
     // update weight counter
     ++counter[e];
@@ -388,12 +389,14 @@ void HistoryGraph::updateGraph(const Interaction i){
 
     // update counters
     if (!main_graph.hasEdge(u_main, v_main)) {
+        weight_counter.add_counter(e_main);
         degree_counter.increase_counter(u_main);
         degree_counter.increase_counter(v_main);
     }
     weightedDegree_counter.increase_counter(u_main);
     weightedDegree_counter.increase_counter(v_main);
-   
+    weight_counter.increase_counter(e_main);   
+
     main_graph.increaseWeight(u_main, v_main, 1);
     //main_graph.max_weighted_degree(u_main, v_main);
 

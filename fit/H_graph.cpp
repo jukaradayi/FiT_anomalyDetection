@@ -40,9 +40,12 @@ void HGraph::trimQueue(Time t) {
         
         // decrease edge counter
         Edge e0(i0.u, i0.v);
+        Edge e0_main(u0_main, v0_main);
         --counter[e0];
+
         weightedDegree_counter.decrease_counter(u0_main);
         weightedDegree_counter.decrease_counter(v0_main);
+        weight_counter.decrease_counter(e0_main);
 
         main_graph.setWeight(u0_main, v0_main, counter[e0]);
         decreaseTotalWeight();
@@ -103,6 +106,7 @@ void HGraph::trimQueue(Time t) {
             }
             degree_counter.decrease_counter(u0_main);
             degree_counter.decrease_counter(v0_main);
+            weight_counter.remove_counter(e0_main);
             main_graph.removeEdge(u0_main, v0_main);
             //std::cout << "node u_main "<<u0_main<<" main " << main_graph.degree(u0_main) << " counter " << degree_counter.get_value(u0_main) <<" \n";
 
