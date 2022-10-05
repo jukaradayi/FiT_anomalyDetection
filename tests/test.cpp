@@ -160,6 +160,11 @@ TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
                 REQUIRE(H5->main_graph.degree(mynode) == H5->degree_counter.get_value(mynode));
                 REQUIRE(H5->main_graph.weightedDegree(mynode) == H5->weightedDegree_counter.get_value(mynode));
             }
+            for (auto main_edge=H5->main_graph.edgeRange().begin(); main_edge!=H5->main_graph.edgeRange().end(); ++main_edge) {
+                StreamGraphs::Edge myedge((*main_edge).u, (*main_edge).v);
+                REQUIRE(H5->main_graph.weight((*main_edge).u, (*main_edge).v) == H5->weight_counter.get_value(myedge));
+            }
+
         }       
     }
 }
