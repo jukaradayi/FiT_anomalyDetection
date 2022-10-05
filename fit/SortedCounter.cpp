@@ -5,11 +5,14 @@
 namespace StreamGraphs {
 using namespace StreamGraphs;
 
-SortedCounters::SortedCounters(){}
+template<class T>
+SortedCounters<T>::SortedCounters(){}
 
-SortedCounters::~SortedCounters(){}
+template<class T>
+SortedCounters<T>::~SortedCounters(){}
 
-uint64_t SortedCounters::get_value(uint64_t counter) {
+template<class T>
+uint64_t SortedCounters<T>::get_value(T counter) {
     if (counter2pos.find(counter) != counter2pos.end()) {
         uint64_t counter_idx = counter2pos[counter];
         return values[counter_idx];
@@ -18,8 +21,8 @@ uint64_t SortedCounters::get_value(uint64_t counter) {
     }
 }
 
-
-void SortedCounters::add_counter(uint64_t counter) {
+template<class T>
+void SortedCounters<T>::add_counter(T counter) {
 
     if (distrib.find(0) == distrib.end()) {
         distrib[0] = 0;
@@ -31,10 +34,11 @@ void SortedCounters::add_counter(uint64_t counter) {
     values.push_back(0);
 }
 
-void SortedCounters::increase_counter(uint64_t counter) {
+template<class T>
+void SortedCounters<T>::increase_counter(T counter) {
     uint64_t val = get_value(counter);
     uint64_t val_idx = val2pos[val];
-    uint64_t first_counter = pos2counter[val_idx];
+    T first_counter = pos2counter[val_idx];
 
     // swap counters
     if (first_counter != counter) {
@@ -67,11 +71,12 @@ void SortedCounters::increase_counter(uint64_t counter) {
     values[counter2pos[counter]] += 1;
 }
 
-void SortedCounters::decrease_counter(uint64_t counter) {
+template<class T>
+void SortedCounters<T>::decrease_counter(T counter) {
     uint64_t val = get_value(counter);
     uint64_t val_idx = val2pos[val];
     uint64_t N_val = distrib[val] - 1;
-    uint64_t last_counter = pos2counter[val_idx + N_val];
+    T last_counter = pos2counter[val_idx + N_val];
 
     // swap counters
     if (last_counter != counter) { // TODO make function
@@ -102,7 +107,9 @@ void SortedCounters::decrease_counter(uint64_t counter) {
     values[counter2pos[counter]] -= 1;
 
 }
-void SortedCounters::remove_counter(uint64_t counter){
+
+template<class T>
+void SortedCounters<T>::remove_counter(T counter){
 
     distrib[0] -= 1;
     if (distrib[0] == 0) {
@@ -110,7 +117,7 @@ void SortedCounters::remove_counter(uint64_t counter){
         val2pos.erase(0);
     }
     uint64_t val = get_value(counter);
-    uint64_t last_counter = pos2counter[values.size() - 1];
+    T last_counter = pos2counter[values.size() - 1];
 
     // swap counters
     if (last_counter != counter) { // TODO make function

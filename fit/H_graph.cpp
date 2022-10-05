@@ -41,6 +41,8 @@ void HGraph::trimQueue(Time t) {
         // decrease edge counter
         Edge e0(i0.u, i0.v);
         --counter[e0];
+        weightedDegree_counter.decrease_counter(u0_main);
+        weightedDegree_counter.decrease_counter(v0_main);
 
         main_graph.setWeight(u0_main, v0_main, counter[e0]);
         decreaseTotalWeight();

@@ -83,6 +83,7 @@ node HistoryGraph::addNode(const node _u, const bool is_top) {
     }
     node2main[_u] = u;
     main2node[u] = _u;
+    weightedDegree_counter.add_counter(u);
     degree_counter.add_counter(u);
     if (use_projection) {
         // update projection -- Not update bot graph when main graph is not bipartite
@@ -140,6 +141,8 @@ void HistoryGraph::removeNode(const node _u, const bool is_top) {
 
    main2node[u] = none;
    degree_counter.remove_counter(u);
+   weightedDegree_counter.remove_counter(u);
+
    // in projection : remove node and its neighbors
    if (use_projection && (is_top || !is_top && !is_bipartite)) {
        // remove node from top graph
@@ -382,12 +385,15 @@ void HistoryGraph::updateGraph(const Interaction i){
 
     // update queue and main graph
     queue.push(i);
-    if (!main_graph.hasEdge(u_main, v_main)) {
 
+    // update counters
+    if (!main_graph.hasEdge(u_main, v_main)) {
         degree_counter.increase_counter(u_main);
         degree_counter.increase_counter(v_main);
     }
-
+    weightedDegree_counter.increase_counter(u_main);
+    weightedDegree_counter.increase_counter(v_main);
+   
     main_graph.increaseWeight(u_main, v_main, 1);
     //main_graph.max_weighted_degree(u_main, v_main);
 

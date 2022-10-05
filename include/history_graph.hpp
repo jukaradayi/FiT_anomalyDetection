@@ -93,7 +93,9 @@ public:
     std::vector<node> removed_bot; ///< same as removed_main for bot_graph
     std::vector<node> removed_unpk; //
     
-    SortedCounters degree_counter;
+    SortedCounters<node> degree_counter;
+    SortedCounters<node> weightedDegree_counter;
+    SortedCounters<Edge> weight_counter;
 
     // degree distribution
     std::vector<Count> main_degree_distribution; ///< the degree distribution of the main graph

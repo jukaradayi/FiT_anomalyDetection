@@ -21,7 +21,7 @@ add_executable(fit.bin ${SOURCE_FILES})
 
 #find_package(networkit REQUIRED)
 add_library(fit SHARED
-   fit/SortedCounter.cpp
+    #fit/SortedCounter.cpp
    fit/G_graph.cpp
    fit/H_graph.cpp
    fit/PLM.cpp
