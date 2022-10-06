@@ -10,21 +10,10 @@ Given a link stream in input, aggregate the stream into different graph sizes an
 Installation
 ============
 
-Using Docker
-------------
-
-Build the docker image using 
-
-  docker build -t getting-started .
-
-To use the docker, you then have to create a data/ folder inside your current directory, put your <file> in data/, then run using 
-
-  docker run -v $PWD/data:/mnt/data -it getting-started <file> <njobs>
-
 Requirements
 ------------
 
-You need a g++ compilator compatible with C++14
+You need a g++ compilator compatible with C++14, cmake (>=3.10), networkit and catch2 ( https://github.com/catchorg/Catch2 )
 
 NetworKit installation
 ----------------------
@@ -43,17 +32,27 @@ make -j5 && make install
 An error might occur where `ttmath` headers are not copied in the library. You need to check if `</PATH/TO/NETWORKIT/LIB/>/include/ttmath/` is empty.
 If it is empty, copy the content of `networkit/extlibs/ttmath/ttmath/` into `</PATH/TO/NETWORKIT/LIB/>/include/ttmath/`
 
+Then 
+
+```
+export LD_LIBRARY_PATH=</PATH/TO/NETWORKIT/LIB/>/lib
+```
+
 Project compilation
 -------------------
 
 When NetworKit is installed, you can compile the project:
 
-g++ main.cpp G_graph.cpp history_graph.cpp H_graph.cpp PLM.cpp metrics.cpp -L</PATH/TO/NETWORKIT/LIB/>/lib -I</PATH/TO/NETWORKIT/LIB/>/include -lnetworkit -std=c++14 -fopenmp -O3
+```
+mkdir build && cd build
+cmake ../
+make 
+```
 
-Then 
+You can then run the unit tests to ensure that everything works as intended:
 
 ```
-export LD_LIBRARY_PATH=</PATH/TO/NETWORKIT/LIB/>/lib
+./tests
 ```
 
 Usage
@@ -63,12 +62,12 @@ The parameter order is important.
 The parameters noted as "required" are mandatory, the "optional"  are not.
 : 
 ```
-    ./a.out  [required] -f <Path To CSV> -o <Path To Output Folder> -h <List Of H Sizes> -g <List Of G Sizes> -k <Bound On The Degree> [optional] -m1 -m2 -m3 -p -b
+    ./fit.bin  [required] -f <Path To CSV> -o <Path To Output Folder> -h <List Of H Sizes> -g <List Of G Sizes> -k <Bound On The Degree> [optional] -m1 -m2 -m3 -p -b
 ```
 
-Example :
+Example (for 1 run with 1 history graph H of size 1024) :
 ```
-    ./a.out  -f uci/uci.010/added_links.txt -o uci_output/ -h 1024 2048 4096 -g 60 3600 7200  -k 10  -m1 -m2 -p
+    ./fit.bin  -f uci/uci.010/added_links.txt -o uci_output/ -h 1024 -g -k 10  -m1 -m2 -p
 ```
 
 Optional parameters [see below for list of metrics toggled by m1, m2 and m3): 
@@ -82,6 +81,19 @@ Optional parameters [see below for list of metrics toggled by m1, m2 and m3):
 -p : when enabled, compute projection graph, and output metrics on them
 
 -b : enable when the input graph is bipartite
+
+
+
+Using Docker (DEPRECATED - TODO: update) 
+------------
+
+Build the docker image using 
+
+  docker build -t getting-started .
+
+To use the docker, you then have to create a data/ folder inside your current directory, put your <file> in data/, then run using 
+
+  docker run -v $PWD/data:/mnt/data -it getting-started <file> <njobs>
 
 List of Metrics
 ---------------
