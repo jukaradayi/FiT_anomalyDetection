@@ -597,33 +597,15 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::unordered_set<node> component_u_nodes_with(all_components[components_with.componentOfNode(u_main)].begin(), 
                                                         all_components[components_with.componentOfNode(u_main)].end());
 
-        //Graph link_component = GraphTools::subgraphFromNodes(history.main_graph, component_u_nodes_with);
-
         integerResults["link component number of link"] = countLinks(history.main_graph, component_u_nodes_with, history.main_bound);
         integerResults["link component number of nodes"] = component_u_nodes_with.size() ;
 
-
-        //integerResults["link component number of nodes"] = link_component.numberOfNodes();
-        //integerResults["link component number of links"] = link_component.numberOfEdges();
         integerResults["number of components G"] = components_with.numberOfComponents();
         integerResults["size largest component G"] = max_size_component_with;
 
         /*************/
         /*BFS metrics*/
         /*************/
-        // parallelize BFS ? 
-        //std::vector<BFS> BFS_with;
-        //BFS_with.push_back(BFS(history.main_graph, u_main, true));
-        //BFS_with.push_back(BFS(history.main_graph, v_main, true));
-        //#pragma omp parallel for num_threads(2)
-        //for (omp_index u = 0; u < static_cast<omp_index>(2); ++u){
-        //    BFS_with[u].run();
-        //}
-        //BFS BFSu_with = BFS_with.back();
-        //BFS_with.pop_back();
-        //BFS BFSv_with = BFS_with.back();
-        //BFS_with.pop_back();
-
         BFS BFSu_with = BFS(history.main_graph, u_main, true);
         BFS BFSv_with = BFS(history.main_graph, v_main, true);
         BFSu_with.run();
@@ -632,7 +614,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         /********************/
         /*Core Decomposition*/
         /********************/
-
         CoreDecomposition core_with = CoreDecomposition(history.main_graph, false);
         core_with.run();
 
@@ -642,30 +623,13 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         /**********/
         PageRank pagerank_with(history.main_graph);
         pagerank_with.run();
-        //}
 
         /************************/
         /************************/
         /* Compute metrics on G-*/
         /************************/
         /************************/
-        // Remove (u,v)
         history.main_graph.removeEdge(u_main, v_main);
-
-        //if (use_global) {
-        //std::vector<BFS> BFS_without;
-        //BFS_without.push_back(BFS(history.main_graph, u_main, true));
-        //BFS_without.push_back(BFS(history.main_graph, v_main, true));
-
-        //#pragma omp parallel for num_threads(1)
-        //for (omp_index u = 0; u < static_cast<omp_index>(2); ++u){
-        //    BFS_without[u].run();
-        //}
-
-        //BFS BFSu_with = all_BFS.back(); 
-        //all_BFS.pop_back();
-        //BFS BFSv_with = all_BFS.back();
-        //all_BFS.pop_back();
 
         BFS BFSu_without = BFS(history.main_graph, u_main, true);
         BFS BFSv_without = BFS(history.main_graph, v_main, true);
@@ -683,7 +647,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         /**********/
         PageRank pagerank_without(history.main_graph);
         pagerank_without.run();
-
 
         /**********************/
         /*Connected Components*/
@@ -718,6 +681,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         double pagerank_variation = 0;
         double pagerank_max_with = 0;
         double pagerank_max_without = 0;
+        double pagerank_min_with = 10;
+        double pagerank_min_without = 10;
+
         double core_variation = 0;
         Count idx = 0;
         for (const auto n : history.main_graph.nodeRange()){
@@ -765,6 +731,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             pagerank_variation += std::abs(static_cast<int>(pagerank_with.score(n) - pagerank_without.score(n)));
             pagerank_max_with = (pagerank_max_with > pagerank_with.score(n))? pagerank_max_with : pagerank_with.score(n);
             pagerank_max_without = (pagerank_max_without > pagerank_without.score(n))? pagerank_max_without : pagerank_without.score(n);
+            pagerank_min_with = (pagerank_min_with < pagerank_with.score(n))? pagerank_min_with : pagerank_with.score(n);
+            pagerank_min_without = (pagerank_min_without < pagerank_without.score(n))? pagerank_min_without : pagerank_without.score(n);
+
 
           //}
 
@@ -786,13 +755,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::vector<std::vector<node>> all_components_without = components_without.getComponents();
         std::unordered_set<node> component_u_nodes_without(all_components_without[components_without.componentOfNode(u_main)].begin(), all_components_without[components_without.componentOfNode(u_main)].end());
             std::unordered_set<node> component_v_nodes_without(all_components_without[components_without.componentOfNode(v_main)].begin(), all_components_without[components_without.componentOfNode(v_main)].end());
-
-        //  Graph u_component_without = GraphTools::subgraphFromNodes(history.main_graph, component_u_nodes_without);
-        //  Graph v_component_without = GraphTools::subgraphFromNodes(history.main_graph, component_v_nodes_without);
-        //*std::max_element(dist_to_u_with.begin(), dist_to_u_with.end());
-        //std::max_element(dist_to_v_with.begin(), dist_to_v_with.end());
-        //dist_to_u_without.begin(), dist_to_u_without.end());
-        //dist_to_v_without.begin(), dist_to_v_without.end());
 
         integerResults["eccentricity u in G"] = *std::max_element(dist_to_u_with, dist_to_u_with + N);
         integerResults["eccentricity v in G"] = *std::max_element(dist_to_v_with, dist_to_v_with +N);
@@ -844,115 +806,10 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         doubleResults["pagerank of v in G-"] = pagerank_without.score(v_main);
         doubleResults["pagerank max G"] = pagerank_max_with;
         doubleResults["pagerank max G-"] = pagerank_max_without;
+        doubleResults["pagerank min G"] = pagerank_min_with;
+        doubleResults["pagerank min G-"] = pagerank_min_without;
         doubleResults["pagerank variation"] = pagerank_variation;
 
-
-        //}
-        //if (use_nonLinear) { 
-        /**********/
-        /*PageRank*/
-        /**********/
-
-        //}
-        /*************/
-        /*PLM on proj*/
-        /*************/
-        //std::vector<PLM> plms_top;
-        //std::vector<PLM> plms_bot;
-        //std::vector<Partition> partitions_top(N_plm, Partition(0));
-        //std::vector<Count> N_changes_top(N_plm, 0);
-        //std::vector<Partition> partitions_bot(N_plm, Partition(0));
-        //std::vector<Count> N_changes_bot(N_plm, 0);
-
-        //std::vector<Count> N_subsets_bot(N_plm, 0);
-        //std::vector<Count> max_subset_size_bot(N_plm, 0);
-        //std::vector<bool> same_subset_uv_bot(N_plm, false);
-        //std::vector<Count> u_subset_size_bot(N_plm, 0);
-        //std::vector<Count> v_subset_size_bot(N_plm, 0);
-        //std::vector<Count> N_subsets_top(N_plm, 0);
-        //std::vector<Count> max_subset_size_top(N_plm, 0);
-        //std::vector<bool> same_subset_uv_top(N_plm, false);
-        //std::vector<Count> u_subset_size_top(N_plm, 0);
-        //std::vector<Count> v_subset_size_top(N_plm, 0);
-
-        //// parallelize PLM
-        //#pragma omp parallel for num_threads(1)
-        //for (omp_index omp_idx = 0; omp_idx < static_cast<omp_index>(N_plm); ++omp_idx){
-        //    //std::pair<Partition, count> estimation = estimate(partitions[u]);
-        //    //PLM plm(projection, false, 1.0, "balanced",32,true,true,partitions[u]);
-        //    // top graph
-        //    Count z_top = history.top_graph.upperNodeIdBound();
-        //    Partition zeta_top(z_top);
-        //    zeta_top.allToSingletons();
-        //    PLM plm_top(history.top_graph, false, 1.0, "none randomized",32,false,false,zeta_top);
-        //    plm_top.run();
-        //    partitions_top[omp_idx] = plm_top.getPartition();
-        //    N_changes_top[omp_idx] = plm_top.getNumberChanges();
-
-
-        //    Partition partition_top = plm_top.getPartition();
-        //    partitions_top[omp_idx] = partition_top;
-        //    N_subsets_top[omp_idx] = partition_top.numberOfSubsets();
-        //    std::vector<Count> subset_sizes_top = partition_top.subsetSizes(); 
-        //    max_subset_size_top[omp_idx] = *std::max_element(subset_sizes_top.begin(), subset_sizes_top.end());
-        //    same_subset_uv_top[omp_idx] = partition_top.inSameSubset(u_main, v_main);
-        //    index u_subset_top = partition_top.subsetOf(u_main);
-        //    index v_subset_top = partition_top.subsetOf(v_main);
-        //    u_subset_size_top[omp_idx] = partition_top.subsetSizeMap()[u_subset_top];
-        //    v_subset_size_top[omp_idx] = partition_top.subsetSizeMap()[v_subset_top];
-        //    N_changes_top[omp_idx] = plm_top.getNumberChanges();
-
-        //    // bot graph
-        //    Count z_bot = history.bot_graph.upperNodeIdBound();
-        //    Partition zeta_bot(z_bot);
-        //    zeta_bot.allToSingletons();
-        //    PLM plm_bot(history.bot_graph, false, 1.0, "none randomized",32,false,false,zeta_bot);
-        //    plm_bot.run();
-        //    partitions_bot[omp_idx] = plm_bot.getPartition();
-        //    N_changes_bot[omp_idx] = plm_bot.getNumberChanges();
-
-
-        //    Partition partition_bot = plm_bot.getPartition();
-        //    partitions_bot[omp_idx] = partition_bot;
-        //    N_subsets_bot[omp_idx] = partition_bot.numberOfSubsets();
-        //    std::vector<Count> subset_sizes_bot = partition_bot.subsetSizes(); 
-        //    max_subset_size_bot[omp_idx] = *std::max_element(subset_sizes_bot.begin(), subset_sizes_bot.end());
-        //    same_subset_uv_bot[omp_idx] = partition_bot.inSameSubset(u_main, v_main);
-        //    index u_subset_bot = partition_bot.subsetOf(u_main);
-        //    index v_subset_bot = partition_bot.subsetOf(v_main);
-        //    u_subset_size_bot[omp_idx] = partition_bot.subsetSizeMap()[u_subset_bot];
-        //    v_subset_size_bot[omp_idx] = partition_bot.subsetSizeMap()[v_subset_bot];
-        //    N_changes_bot[omp_idx] = plm_bot.getNumberChanges();
-
-        //}
-        ////// sort partitions according to the number of subsets and output features
-        ////// using this order
-        //std::vector<index> sorting_indexes_top(N_plm, 0);
-        //std::iota(sorting_indexes_top.begin(), sorting_indexes_top.end(), 0);
-        //sort(sorting_indexes_top.begin(),
-        //     sorting_indexes_top.end(),
-        //     [&](int i,int j){return N_subsets_top[i]<N_subsets_top[j];});
-        //std::vector<index> sorting_indexes_bot(N_plm, 0);
-        //std::iota(sorting_indexes_bot.begin(), sorting_indexes_top.end(), 0);
-        //sort(sorting_indexes_bot.begin(),
-        //     sorting_indexes_bot.end(),
-        //     [&](int i,int j){return N_subsets_bot[i]<N_subsets_bot[j];});
-
-        //for (size_t idx=0; idx < sorting_indexes_top.size(); ++idx) {
-        //    integerResults["number of subsets in top graph" + std::to_string(idx)] = N_subsets_top[sorting_indexes_top[idx]];
-        //    integerResults["max subset size in top graph" + std::to_string(idx)] = max_subset_size_top[sorting_indexes_top[idx]];
-        //    integerResults["u subset size in top graph" + std::to_string(idx)] = u_subset_size_top[sorting_indexes_top[idx]];
-        //    integerResults["v  subset size in top graph" + std::to_string(idx)] = v_subset_size_top[sorting_indexes_top[idx]];
-        //    integerResults["u v in same community in top graph"+ std::to_string(idx)] = same_subset_uv_top[sorting_indexes_top[idx]];
-
-        //    integerResults["number of subsets in bot graph" + std::to_string(idx)] = N_subsets_bot[sorting_indexes_bot[idx]];
-        //    integerResults["max subset size in bot graph" + std::to_string(idx)] = max_subset_size_bot[sorting_indexes_bot[idx]];
-        //    integerResults["u subset size in bot graph" + std::to_string(idx)] = u_subset_size_bot[sorting_indexes_bot[idx]];
-        //    integerResults["v  subset size in bot graph" + std::to_string(idx)] = v_subset_size_bot[sorting_indexes_bot[idx]];
-        //    integerResults["u v in same community in bot graph"+ std::to_string(idx)] = same_subset_uv_bot[sorting_indexes_bot[idx]];
-
-        //}
- 
         /***********/
         /*PLM on G-*/
         /***********/

@@ -108,6 +108,7 @@ void HGraph::trimQueue(Time t) {
             degree_counter.decrease_counter(v0_main);
             weight_counter.remove_counter(e0_main);
             main_graph.removeEdge(u0_main, v0_main);
+            counter.erase(e0);
             //std::cout << "node u_main "<<u0_main<<" main " << main_graph.degree(u0_main) << " counter " << degree_counter.get_value(u0_main) <<" \n";
 
             decreaseMainDegree(u0_main, v0_main);

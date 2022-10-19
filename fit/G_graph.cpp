@@ -109,6 +109,8 @@ void GGraph::trimQueue(Time t) {
             degree_counter.decrease_counter(v0_main);
             weight_counter.remove_counter(e0_main);
             main_graph.removeEdge(u0_main, v0_main);
+            counter.erase(e0);
+
             decreaseMainDegree(u0_main, v0_main);
 
             if (main_graph.degree(u0_main) == 0) {

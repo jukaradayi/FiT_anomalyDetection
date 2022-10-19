@@ -6,6 +6,7 @@
 #include "G_graph.hpp"
 #include "globals.hpp"
 #include "csv.hpp"
+#include "metrics.hpp"
 TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
     using namespace StreamGraphs;
     std::ifstream file("unit_clean"); /// using hand made dataset on which results were computed by hand to check
@@ -167,6 +168,58 @@ TEST_CASE("simple graph", "[StreamGraphs::HistoryGraph]") {
 
         }       
     }
+
+    // Check that removal of link works correctly in metrics for m3 
+    SECTION("Check link removal in metrics"){
+    
+        NetworKit::Graph main_graph(0, true, false);
+        NetworKit::Graph top_graph(0, true, false);
+        NetworKit::Graph bot_graph(0, true, false);
+        std::string output = "";
+
+        HGraph* H10 = new HGraph(main_graph, top_graph, bot_graph, true, false, true, 1000, 1000, 100, 10); //TODO correct node set size
+
+        Metrics metrics(*H10, false, false, true, false);
+
+        int line_idx = 0;
+        for(auto& main_loop: CSVRange(file))
+        {
+            StreamGraphs::Interaction i(std::stoi((main_loop)[0]), std::stoi((main_loop)[1]), std::stoi((main_loop)[2]));
+            H10->updateGraph(i); // update graph
+            for(std::map<StreamGraphs::Edge, uint64_t>::iterator counterIt = H10->counter.begin(); counterIt != H10->counter.end(); ++counterIt)
+            {
+                StreamGraphs::Edge e =  counterIt->first;
+                uint64_t weight = counterIt->second;
+                StreamGraphs::Edge main_e(H10->node2main[e.u], H10->node2main[e.v]);
+
+                // check that edge is in graph
+                REQUIRE(H10->main_graph.hasEdge(main_e.u, main_e.v));
+                REQUIRE(H10->main_graph.weight(main_e.u, main_e.v) == weight);
+
+
+            }
+
+            if (line_idx >= 10){
+                output += metrics.run(i.u, i.v, line_idx);
+            }
+
+            for(std::map<StreamGraphs::Edge, uint64_t>::iterator counterIt = H10->counter.begin(); counterIt != H10->counter.end(); ++counterIt)
+            {
+                StreamGraphs::Edge e =  counterIt->first;
+                uint64_t weight = counterIt->second;
+
+                StreamGraphs::Edge main_e(H10->node2main[e.u], H10->node2main[e.v]);
+
+                // check that edge is in graph
+                REQUIRE(H10->main_graph.hasEdge(main_e.u, main_e.v));
+                REQUIRE(H10->main_graph.weight(main_e.u, main_e.v) == weight);
+
+            }
+            ++line_idx;
+
+        }       
+    }
+
 }
 
 
