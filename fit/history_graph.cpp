@@ -3,6 +3,9 @@
 // 
 // Implementation of graphs bounded on the node degree
 
+//#include <catch2/catch_test_macros.hpp> // TODO Make it optional
+#include "csv.hpp"
+
 #include "history_graph.hpp"
 #include <networkit/graph/Graph.hpp>
 #include <unordered_set>
@@ -79,8 +82,9 @@ node HistoryGraph::addNode(const node _u, const bool is_top) {
         main_graph.restoreNode(u);
     }
     node2main[_u] = u;
-
     main2node[u] = _u;
+    weightedDegree_counter.add_counter(u);
+    degree_counter.add_counter(u);
     if (use_projection) {
         // update projection -- Not update bot graph when main graph is not bipartite
         if ((is_top && removed_top.size() > 0) || (!is_top && !is_bipartite && removed_top.size() >0)) {
@@ -136,6 +140,8 @@ void HistoryGraph::removeNode(const node _u, const bool is_top) {
    node2main[_u] = none;
 
    main2node[u] = none;
+   degree_counter.remove_counter(u);
+   weightedDegree_counter.remove_counter(u);
 
    // in projection : remove node and its neighbors
    if (use_projection && (is_top || !is_top && !is_bipartite)) {
@@ -373,18 +379,30 @@ void HistoryGraph::updateGraph(const Interaction i){
     } else {
         v_main = node2main[i.v];
     }
+    Edge e_main(u_main, v_main);
 
     // update weight counter
     ++counter[e];
 
     // update queue and main graph
     queue.push(i);
+
+    // update counters
+    if (!main_graph.hasEdge(u_main, v_main)) {
+        weight_counter.add_counter(e_main);
+        degree_counter.increase_counter(u_main);
+        degree_counter.increase_counter(v_main);
+    }
+    weightedDegree_counter.increase_counter(u_main);
+    weightedDegree_counter.increase_counter(v_main);
+    weight_counter.increase_counter(e_main);   
+
     main_graph.increaseWeight(u_main, v_main, 1);
     //main_graph.max_weighted_degree(u_main, v_main);
 
     increaseTotalWeight();
-    increaseMainDegree(u_main, v_main, counter[e]); 
-
+    increaseMainDegree(u_main, v_main, counter[e]);
+    
     // update projection graph
     if (use_projection) {
         node u_top = node2top[i.u];
@@ -394,20 +412,38 @@ void HistoryGraph::updateGraph(const Interaction i){
         // update top 
         // check if either node has passed the degree limit
         if (main_graph.degree(v_main) >= proj_bound) {
-            removeEdgeProjection(top_graph, v_main, u_top, true);
+            //removeEdgeProjection(top_graph, v_main, u_top, true);
+            forBoundedNeighbors(main_graph, v_main, [&] (node n_main) {
+                node n = main2node[n_main];
+                node n_proj = node2top[n];
+                removeEdgeProjection(top_graph, v_main, n_proj, true);
+            });
+
         } else {
             addEdgeProjection(v_main, u_top, true);
         }
 
         if (main_graph.degree(u_main) >= proj_bound && is_bipartite) {
-            removeEdgeProjection(bot_graph, u_main, v_bot, false);
+            //removeEdgeProjection(bot_graph, u_main, v_bot, false);
+            forBoundedNeighbors(main_graph, u_main, [&] (node n_main) {
+                node n = main2node[n_main];
+                node n_proj = node2bot[n];
+                removeEdgeProjection(bot_graph, u_main, n_proj, true);
+            });
+
         } else if (is_bipartite) {
             addEdgeProjection(u_main, v_bot, false);
         }
 
         // update bottom 
         if (main_graph.degree(u_main) >= proj_bound && !is_bipartite) {
-            removeEdgeProjection(top_graph, u_main, v_bot, false);
+            //removeEdgeProjection(top_graph, u_main, v_bot, false);
+            forBoundedNeighbors(main_graph, u_main, [&] (node n_main) {
+                node n = main2node[n_main];
+                node n_proj = node2top[n];
+                removeEdgeProjection(top_graph, u_main, n_proj, true);
+            });
+
         } else if (!is_bipartite) {
             addEdgeProjection(u_main, v_bot, false);
         }
@@ -418,5 +454,4 @@ void HistoryGraph::updateGraph(const Interaction i){
 }
 
 };
-
 

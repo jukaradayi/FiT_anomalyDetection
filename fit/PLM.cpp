@@ -14,7 +14,7 @@
 #include <networkit/coarsening/ClusteringProjector.hpp>
 #include <networkit/coarsening/ParallelPartitionCoarsening.hpp>
 #include "PLM.hpp"
-#include <networkit/distance/BFS.hpp>
+//#include <networkit/distance/BFS.hpp>
 #include <networkit/graph/GraphTools.hpp>
 
 namespace StreamGraphs {

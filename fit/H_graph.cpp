@@ -40,7 +40,12 @@ void HGraph::trimQueue(Time t) {
         
         // decrease edge counter
         Edge e0(i0.u, i0.v);
+        Edge e0_main(u0_main, v0_main);
         --counter[e0];
+
+        weightedDegree_counter.decrease_counter(u0_main);
+        weightedDegree_counter.decrease_counter(v0_main);
+        weight_counter.decrease_counter(e0_main);
 
         main_graph.setWeight(u0_main, v0_main, counter[e0]);
         decreaseTotalWeight();
@@ -58,15 +63,54 @@ void HGraph::trimQueue(Time t) {
                 //if (is_bipartite) v0_bot = node2bot[i0.v];
 
 
-                removeEdgeProjection(top_graph, v0_main, u0_top, true);
+                //removeEdgeProjection(top_graph, v0_main, u0_top, true);
+                if (main_graph.degree(v0_main) < proj_bound) {
+                    removeEdgeProjection(top_graph, v0_main, u0_top, true);
+                } else if (main_graph.degree(v0_main) == proj_bound) {
+                    forBoundedNeighbors(main_graph, v0_main, [&] (node n_main) {
+                        node n = main2node[n_main];
+                        node n_proj = node2top[n];
+                        addEdgeProjection(v0_main, n_proj, true);
+                       });
+                }
+
+
                 if (is_bipartite) {
-                    removeEdgeProjection(bot_graph, u0_main, v0_bot, false);
+                    //removeEdgeProjection(bot_graph, u0_main, v0_bot, false);
+                    if (main_graph.degree(u0_main) < proj_bound) {
+                        forBoundedNeighbors(main_graph, u0_main, [&] (node n_main) {
+                            node n = main2node[n_main];
+                            node n_proj = node2bot[n];
+                            addEdgeProjection(u0_main, n_proj, false);
+                           });
+
+                    } else if (main_graph.degree(u0_main) ==  proj_bound){
+                        removeEdgeProjection(bot_graph, u0_main, v0_bot, false);
+                    }
+
                 } else {
-                    removeEdgeProjection(top_graph, u0_main, v0_bot, false);
+                    //removeEdgeProjection(top_graph, u0_main, v0_bot, false);
+                    if (main_graph.degree(u0_main) < proj_bound) {
+                        forBoundedNeighbors(main_graph, u0_main, [&] (node n_main) {
+                            node n = main2node[n_main];
+                            node n_proj = node2top[n];
+                            addEdgeProjection(u0_main, n_proj, true);
+                           });
+
+                    } else if (main_graph.degree(u0_main) ==  proj_bound){
+                        removeEdgeProjection(top_graph, u0_main, v0_bot, false);
+                    }
+
 
                 }
             }
+            degree_counter.decrease_counter(u0_main);
+            degree_counter.decrease_counter(v0_main);
+            weight_counter.remove_counter(e0_main);
             main_graph.removeEdge(u0_main, v0_main);
+            counter.erase(e0);
+            //std::cout << "node u_main "<<u0_main<<" main " << main_graph.degree(u0_main) << " counter " << degree_counter.get_value(u0_main) <<" \n";
+
             decreaseMainDegree(u0_main, v0_main);
 
             if (main_graph.degree(u0_main) == 0) {

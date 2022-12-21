@@ -45,33 +45,6 @@ Metrics::Metrics(HistoryGraph& history,const bool use_basic,const bool use_local
 
 Metrics::~Metrics() {}
 
-// TODO : a tester,  pourquoi tout parcourir, on peut juste parcourir les voisinage et voisinages de voisinages qu'on a déjà mesuré ... 
-//
-//int metrics::countLinks(const NetworKit::Graph &G, const std::vector<node> &nodes, int bound){
-//    int n_links = 0;
-//    std::unordered_set<node> visited_links;
-//    for (int i=0; i!=nodes.size(); ++i) {
-//        node u = nodes[i];
-//        for (NetworKit::Graph::NeighborIterator bN = G.neighborRange(u).begin();
-//               bN != G.neighborRange(u).end(); ++bN) { 
-//            node n = *bN;
-//            if (G.degree(n) >= bound) {
-//                continue;
-//            }
-//            if (std::find(nodes.begin(), nodes.end(), n) != nodes.end()) {
-//                if (n > u) {
-//                    std::pair<node,node> myEdge = std::make_pair(u, v); 
-//                } else {
-//                    std::pair<node,node> myEdge = std::make_pair(v,u);  
-//                    continue;
-//                }
-//
-//                n_links += 1;
-//            }
-//        
-//        }
-//    }
-//}
 int Metrics::countLinks(const NetworKit::Graph &G, const std::unordered_set<node> &nodes, int bound){
     //std::unordered_set<node> visited_links;
     int n_links = 0;
@@ -98,7 +71,8 @@ int Metrics::countLinks(const NetworKit::Graph &G, const std::unordered_set<node
     return n_links;
 }
 
-std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, const node u, const node v) {
+std::pair<double, double> Metrics::localClustering(const NetworKit::Graph& G, const node u, const node v) { 
+    // Useful for projections, use countLinks for main graph
     count z = G.upperNodeIdBound();
     std::vector<double> scoreData;
     scoreData.clear();
@@ -261,6 +235,10 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
     }
     int N_plm = 5;
 
+    // time measurements
+    struct timespec O1_start, O1_stop, Ok_start, Ok_stop, Onm_start, Onm_stop;
+
+
     //if (history.is_bipartite) v_bot = history.node2bot[v];
     integerResults["interaction_id"] = interaction_id;
 
@@ -270,7 +248,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
     //    /***************/
     if (use_basic) {
         auto t_start = std::chrono::high_resolution_clock::now();
-        std::clock_t startcputime_O1 = std::clock();
+        //std::clock_t startcputime_O1 = std::clock();
+        int tcpustart = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &O1_start);
+
 
         integerResults["number of nodes"] = history.main_graph.numberOfNodes(); 
         integerResults["number of links"] = history.main_graph.numberOfEdges();
@@ -311,6 +291,26 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
 
 
 
+        //std::clock_t endcputime_O1 = std::clock();
+        auto t_end = std::chrono::high_resolution_clock::now();
+
+        //double dur_O1 = (endcputime_O1 - startcputime_O1) / (double)CLOCKS_PER_SEC; // time in seconds
+        double clock_O1 = std::chrono::duration<double, std::micro>(t_end-t_start).count();
+       
+        int tcpustop =  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &O1_stop);
+        double elapsed_O1_cpu_time = (O1_stop.tv_sec - O1_start.tv_sec) * 1000000 + (O1_stop.tv_nsec - O1_start.tv_nsec)/1000.0;
+        doubleResults["O1 duration"] = elapsed_O1_cpu_time;
+        doubleResults["O1 wall clock"] =  clock_O1;
+        //}
+
+    };
+    
+    if (use_local) {
+        int tcpustart = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &Ok_start);
+        //std::clock_t startcputime_Ok = std::clock();
+        auto t_start = std::chrono::high_resolution_clock::now();
+
+        // O1 metrics on projection graphs
         /********************/
         /*Projection metrics*/
         /********************/
@@ -337,20 +337,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             //integerResults["top max weighted degree"] = top_max_weighted_degree();
             //if (history.is_bipartite) integerResults["bot max weighted degree"] = bot_max_weighted_degree();
         }
-        std::clock_t endcputime_O1 = std::clock();
-        auto t_end = std::chrono::high_resolution_clock::now();
 
-        double dur_O1 = (endcputime_O1 - startcputime_O1) / (double)CLOCKS_PER_SEC; // time in seconds
-        double clock_O1 = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-       
-        doubleResults["O1 duration"] = dur_O1;
-        doubleResults["O1 wall clock"] =  clock_O1;
-        //}
-
-    };
-    
-    if (use_local) {
-        std::clock_t startcputime_Ok = std::clock();
 
         //    //// sets
         //    // get distance 1 and 2 neighbor sets, basic sets
@@ -366,6 +353,8 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
 
         std::unordered_set<node> bNNuNv_u_bNuNNv;
         std::unordered_set<node> bNNuNv_n_bNuNNv;
+        std::unordered_set<node> bNNu_n_Nv_u_bNu_n_NNv;
+
         std::unordered_set<node> bNu_u_bNNu;
         std::unordered_set<node> bNv_u_bNNv;
         std::unordered_set<node> bNu_u_bNv;
@@ -383,7 +372,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             // build neighborhood
             bNu.insert(n_main);
         
-
             // build unions 
             bNu_u_bNv.insert(n_main);
             bNu_u_bNNv.insert(n_main);
@@ -406,6 +394,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             }
         }
 
+        // same sets with v ...
         for (NetworKit::Graph::NeighborIterator bN = history.main_graph.neighborRange(v_main).begin();
                 bN != history.main_graph.neighborRange(v_main).end(); ++bN) {
 
@@ -417,6 +406,7 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
 
             // build neighborhood
             bNv.insert(n_main);
+            bNv_u_bNNv.insert(n_main);
 
             // build unions and intersections
             auto NNuNv_insertion = bNNu_u_bNv.insert(n_main);
@@ -429,54 +419,33 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             if (NuNv_insertion.second == false){
                 bNu_n_bNv.insert(n_main);
             }
-            //for (BoundedNeighborIterator bNN = BoundedNeighborRange(history.main_graph, n_main, history.main_bound).begin();
-            //    bNN != BoundedNeighborRange(history.main_graph, n_main, history.main_bound).end(); ++bNN) {
-            //    node nn_main = *bNN;
             for (NetworKit::Graph::NeighborIterator bNN = history.main_graph.neighborRange(n_main).begin();
                  bNN != history.main_graph.neighborRange(n_main).end(); ++bNN) {
 
-                //node nn_main = *bNN;
                 node nn_main = *bNN;
                 if (history.main_graph.degree(nn_main) >= history.main_bound) {
                     continue;
                 }
 
+                bNv_u_bNNv.insert(nn_main);
+
                 bNNv.insert(nn_main);
-                //std::pair<std::unordered_set<node>,bool> insertion = bNu_u_bNNv.insert(nn_main);
                 auto NuNNv_insertion = bNu_u_bNNv.insert(nn_main);
 
-
-                //if (bNu.find(nn_main) != bNu.end()) {
                 if (NuNNv_insertion.second == false){
                     bNu_n_bNNv.insert(nn_main);
                 }
             }
         }
 
-        //    // build egonets
+        //    // build unions and intersections
+        bNNu_n_Nv_u_bNu_n_NNv.insert(bNNu_n_bNv.begin(), bNNu_n_bNv.end());
+        bNNu_n_Nv_u_bNu_n_NNv.insert(bNu_n_bNNv.begin(), bNu_n_bNNv.end());
 
-        //    // egonet sets
-
-        us_isect(bNNuNv_n_bNuNNv, bNNu_u_bNv, bNu_u_bNNv); // intersection builder
-        //us_isect(bNu_n_bNv, bNu, bNv); // intersection builder
+        //us_isect(bNNuNv_n_bNuNNv, bNNu_u_bNv, bNu_u_bNNv); // intersection builder
 
         bNNuNv_u_bNuNNv.insert(bNNu_u_bNv.begin(),bNNu_u_bNv.end());
         bNNuNv_u_bNuNNv.insert(bNu_u_bNNv.begin(),bNu_u_bNNv.end());
-        bNu_u_bNNu.insert(bNu.begin(), bNu.end());
-        bNu_u_bNNu.insert(bNNu.begin(), bNNu.end());
-        bNv_u_bNNv.insert(bNv.begin(), bNv.end());
-        bNv_u_bNNv.insert(bNNv.begin(), bNNv.end());
-        bNu_u_bNv.insert(bNu.begin(), bNu.end());
-        bNu_u_bNv.insert(bNv.begin(), bNv.end());
-
-        // egonets from node sets 
-        //Graph egonet_NNuNv_u_NuNNv = GraphTools::subgraphFromNodes(history.main_graph, bNNuNv_u_bNuNNv);
-        //Graph egonet_NNuNv_n_NuNNv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNNuNv_u_bNuNNv);
-        //Graph egonet_Nu_u_NNu = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNu_u_bNNu);
-        //Graph egonet_Nv_u_NNv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNv_u_bNNv);
-        //Graph egonet_Nu_u_Nv = GraphTools::subgraphFromNodes(egonet_NNuNv_u_NuNNv, bNu_u_bNv);
-        //Graph egonet_Nu = GraphTools::subgraphFromNodes(egonet_Nu_u_Nv, bNu);
-        //Graph egonet_Nv = GraphTools::subgraphFromNodes(egonet_Nu_u_Nv, bNv);
 
         //    /******************/
         //    /*local clustering*/
@@ -493,28 +462,15 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         } else {
             doubleResults["clustering v"] = 2.0 * ((double) countLinks(history.main_graph, bNv, history.main_bound)) / (history.main_graph.degree(v_main) * (history.main_graph.degree(v_main) -1));
         }
-        //std::pair<double, double> clustering = localClustering(history.main_graph, u_main, v_main);
-        //doubleResults["clustering u"] = clustering.first;
-
-        //doubleResults["clustering v"] = clustering.second;
-        //clustering.run();
-
-        //doubleResults["clustering u"] = clustering.score(u_main);
-        //doubleResults["clustering v"] = clustering.score(v_main);
-
-
-
 
         /*********************************/
         /*Jaccard index and neighborhoods*/
         /*********************************/
         //JaccardIndex jaccard(history.main_graph);
         if (bNu_u_bNv.size() > 0) {
-           doubleResults["Jaccard index u v"] = std::abs(static_cast<int>(bNu_n_bNv.size() / bNu_u_bNv.size()));
+           doubleResults["Jaccard index u v"] = std::abs(static_cast<int>(bNu_n_bNv.size() / bNu_u_bNv.size())); // TODO pourquoi static_cast<int> .. ? 
            
         }
-        // TODO replace Jaccard by actual computation
-        // TODO Jaccard (& Jaccard bipartite on actual neighborhoods or bounded neighborhoods ?
         if (bNu_u_bNNv.size() > 0) {
             doubleResults["Jaccard index bipartite u"] = std::abs(static_cast<int>(bNu_n_bNNv.size() / bNu_u_bNNv.size()));
         } else {
@@ -541,24 +497,37 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         integerResults["neighborhood overlap"] = bNu_u_bNv.size();
         //integerResults["top nehborhood size"] =  
         //integerResults["top nehborhood size"]
-        //int Metrics::countLinks(const NetworKit::Graph &G, const std::vector<node> &nodes, int bound)
 
+        // TODO Number of top/bottom nodes
         integerResults["Nu number of links"] = countLinks(history.main_graph, bNu, history.main_bound);
         integerResults["Nu number of nodes"] = bNu.size();
         integerResults["Nv number of links"]  = countLinks(history.main_graph, bNu, history.main_bound);
         integerResults["Nv number of nodes"]  = bNv.size();;
+
 
         integerResults["Nu u Nv number of links"] = countLinks(history.main_graph, bNu_u_bNv, history.main_bound);
         integerResults["Nu u Nv number of nodes"]  = bNu_u_bNv.size();
 
         integerResults["Nv u NNv number of links"] = countLinks(history.main_graph, bNv_u_bNNv, history.main_bound);
         integerResults["Nv u NNv number of nodes"]  = bNv_u_bNNv.size();
+        integerResults["Nv u NNv number of bot nodes"]  = bNNv.size();
+
+
         integerResults["Nu u NNu number of links"] =  countLinks(history.main_graph, bNu_u_bNNu, history.main_bound);
         integerResults["Nu u NNu number of nodes"]  = bNu_u_bNNu.size();
+        integerResults["Nu u NNu number of top nodes"]  = bNNu.size();
+
         integerResults["(NNu u Nv) u (Nu u NNv) number of links"] = countLinks(history.main_graph, bNNuNv_u_bNuNNv, history.main_bound);
-        integerResults["(NNu u Nv) u (Nu u NNv) number of nodes"] = bNNuNv_u_bNuNNv.size();
-        integerResults["(NNu u Nv) n (Nu u NNv) number of links"] = countLinks(history.main_graph, bNNuNv_n_bNuNNv, history.main_bound);
-        integerResults["(NNu u Nv) n (Nu u NNv) number of nodes"] = bNNuNv_n_bNuNNv.size();
+        integerResults["(NNu u Nv) u (Nu u NNv) number of top nodes"] =  bNNu_u_bNv.size(); //bNNuNv_u_bNuNNv.size();
+        integerResults["(NNu u Nv) u (Nu u NNv) number of bot nodes"] = bNu_u_bNNv.size();//bNNuNv_u_bNuNNv.size();
+
+        //integerResults["(NNu u Nv) n (Nu u NNv) number of links"] = countLinks(history.main_graph, bNNuNv_n_bNuNNv, history.main_bound);
+        //integerResults["(NNu u Nv) n (Nu u NNv) number of nodes"] = bNNuNv_n_bNuNNv.size();
+
+        integerResults["(NNu n Nv) u (Nu n NNv) number of links"] = countLinks(history.main_graph, bNNu_n_Nv_u_bNu_n_NNv, history.main_bound);
+        integerResults["(NNu n Nv) u (Nu n NNv) number of top nodes"] = bNNu_n_bNv.size();//bNNu_n_Nv_u_bNu_n_NNv.size();
+        integerResults["(NNu n Nv) u (Nu n NNv) number of bot nodes"] = bNu_n_bNNv.size();//bNNu_n_Nv_u_bNu_n_NNv.size();
+
 
         integerResults["Nu u Nv maxsize"] = bNu.size() * bNv.size();
         integerResults["Nv u NNv maxsize"] = bNv.size() * bNNv.size();
@@ -566,59 +535,49 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         integerResults["(NNu u Nv) u (Nu u NNv) maxsize"] = bNu_u_bNNv.size() * bNNu_u_bNv.size();
         integerResults["(NNu u Nv) n (Nu u NNv) maxsize"] =  bNu_n_bNNv.size() * bNNu_n_bNv.size();
 
-
-        //integerResults["egonet Nu number of links"] = egonet_Nu.numberOfEdges();
-        //integerResults["egonet Nu number of nodes"] = egonet_Nu.numberOfNodes();
-        //integerResults["egonet Nv number of links"]  = egonet_Nv.numberOfEdges();
-        //integerResults["egonet Nv number of nodes"]  = egonet_Nv.numberOfNodes();
-
-        //integerResults["egonet Nu u Nv number of links"] = egonet_Nu_u_Nv.numberOfEdges();
-        //integerResults["egonet Nu u Nv number of nodes"]  = egonet_Nu_u_Nv.numberOfNodes();
-
-        //integerResults["egonet Nv u NNv number of links"] = egonet_Nv_u_NNv.numberOfEdges();
-        //integerResults["egonet Nv u NNv number of nodes"]  = egonet_Nv_u_NNv.numberOfNodes();
-        //integerResults["egonet Nu u NNu number of links"] = egonet_Nu_u_NNu.numberOfEdges();
-        //integerResults["egonet Nu u NNu number of nodes"]  = egonet_Nu_u_NNu.numberOfNodes();
-        //integerResults["egonet (NNu u Nv) u (Nu u NNv) number of links"] = egonet_NNuNv_u_NuNNv.numberOfEdges();
-        //integerResults["egonet (NNu u Nv) u (Nu u NNv) number of nodes"] = egonet_NNuNv_u_NuNNv.numberOfNodes();
-        //integerResults["egonet (NNu u Nv) n (Nu u NNv) number of links"] = egonet_NNuNv_n_NuNNv.numberOfEdges();
-        //integerResults["egonet (NNu u Nv) n (Nu u NNv) number of nodes"] = egonet_NNuNv_n_NuNNv.numberOfNodes();
-
-        //integerResults["egonet Nu u Nv maxsize"] = bNu.size() * bNv.size();
-        //integerResults["egonet Nv u NNv maxsize"] = bNv.size() * bNNv.size();
-        //integerResults["egonet Nu u NNu maxsize"] = bNu.size() * bNNu.size();
-        //integerResults["egonet (NNu u Nv) u (Nu u NNv) maxsize"] = bNu_u_bNNv.size() * bNNu_u_bNv.size();
-        //integerResults["egonet (NNu u Nv) n (Nu u NNv) maxsize"] =  bNu_n_bNNv.size() * bNNu_n_bNv.size();
-
         // adamic adar
         doubleResults["adamic adar"] = adamic_adar(bNu_n_bNv);
         doubleResults["adamic adar bipartite u"] = adamic_adar_bipartite_u(bNu_n_bNNv);
         doubleResults["adamic adar bipartite v"] = adamic_adar_bipartite_v(bNNu_n_bNv);
 
-        // local metrics on projection
-        if (history.use_projection) {
-            LocalClusteringCoefficient top_clustering(history.top_graph, true);
-            top_clustering.run();
+        // local metrics on projection // TODO changr pour utiliser countLinks
+        //if (history.use_projection) {
+        //    LocalClusteringCoefficient top_clustering(history.top_graph, true);
+        //    top_clustering.run();
 
-            doubleResults["top clustering u"] = top_clustering.score(u_top);
+        //    doubleResults["top clustering u"] = top_clustering.score(u_top);
 
-            if (history.is_bipartite){
+        //    if (history.is_bipartite){
 
-                LocalClusteringCoefficient bot_clustering(history.bot_graph, true);
-                bot_clustering.run();
-                doubleResults["bot clustering v"] = bot_clustering.score(v_bot);
-            } else {
-                doubleResults["top clustering v"] = top_clustering.score(v_bot);
+        //        LocalClusteringCoefficient bot_clustering(history.bot_graph, true);
+        //        bot_clustering.run();
+        //        doubleResults["bot clustering v"] = bot_clustering.score(v_bot);
+        //    } else {
+        //        doubleResults["top clustering v"] = top_clustering.score(v_bot);
 
-            }
-        }
-    std::clock_t endcputime_Ok = std::clock();
-    double dur_Ok = (endcputime_Ok - startcputime_Ok) / (double)CLOCKS_PER_SEC; // time in seconds
-    doubleResults["Ok duration"] = dur_Ok;
+        //    }
+        //}
+
+        // measure time
+        //std::clock_t endcputime_Ok = std::clock();
+        auto t_end = std::chrono::high_resolution_clock::now();
+
+        //double dur_Ok = (endcputime_Ok - startcputime_Ok) / (double)CLOCKS_PER_SEC; // time in seconds
+        double clock_Ok = std::chrono::duration<double, std::micro>(t_end-t_start).count();
+        
+        int tcpustop =  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &Ok_stop);
+        double elapsed_Ok_cpu_time = (Ok_stop.tv_sec - Ok_start.tv_sec)*1000000 + (Ok_stop.tv_nsec - Ok_start.tv_nsec)/1000.0;
+  
+        doubleResults["Ok duration"] = elapsed_Ok_cpu_time;
+        doubleResults["Ok wall clock"] =  clock_Ok;
+
 
     }
     if (use_global) { 
-        std::clock_t startcputime_Onm = std::clock();
+        //std::clock_t startcputime_Onm = std::clock();
+        auto t_start = std::chrono::high_resolution_clock::now();
+        int tcpustart = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &Onm_start);
+
 
         /************/
         /*components*/
@@ -638,33 +597,15 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::unordered_set<node> component_u_nodes_with(all_components[components_with.componentOfNode(u_main)].begin(), 
                                                         all_components[components_with.componentOfNode(u_main)].end());
 
-        //Graph link_component = GraphTools::subgraphFromNodes(history.main_graph, component_u_nodes_with);
-
         integerResults["link component number of link"] = countLinks(history.main_graph, component_u_nodes_with, history.main_bound);
         integerResults["link component number of nodes"] = component_u_nodes_with.size() ;
 
-
-        //integerResults["link component number of nodes"] = link_component.numberOfNodes();
-        //integerResults["link component number of links"] = link_component.numberOfEdges();
         integerResults["number of components G"] = components_with.numberOfComponents();
         integerResults["size largest component G"] = max_size_component_with;
 
         /*************/
         /*BFS metrics*/
         /*************/
-        // parallelize BFS ? 
-        //std::vector<BFS> BFS_with;
-        //BFS_with.push_back(BFS(history.main_graph, u_main, true));
-        //BFS_with.push_back(BFS(history.main_graph, v_main, true));
-        //#pragma omp parallel for num_threads(2)
-        //for (omp_index u = 0; u < static_cast<omp_index>(2); ++u){
-        //    BFS_with[u].run();
-        //}
-        //BFS BFSu_with = BFS_with.back();
-        //BFS_with.pop_back();
-        //BFS BFSv_with = BFS_with.back();
-        //BFS_with.pop_back();
-
         BFS BFSu_with = BFS(history.main_graph, u_main, true);
         BFS BFSv_with = BFS(history.main_graph, v_main, true);
         BFSu_with.run();
@@ -673,7 +614,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         /********************/
         /*Core Decomposition*/
         /********************/
-
         CoreDecomposition core_with = CoreDecomposition(history.main_graph, false);
         core_with.run();
 
@@ -683,30 +623,13 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         /**********/
         PageRank pagerank_with(history.main_graph);
         pagerank_with.run();
-        //}
 
         /************************/
         /************************/
         /* Compute metrics on G-*/
         /************************/
         /************************/
-        // Remove (u,v)
         history.main_graph.removeEdge(u_main, v_main);
-
-        //if (use_global) {
-        //std::vector<BFS> BFS_without;
-        //BFS_without.push_back(BFS(history.main_graph, u_main, true));
-        //BFS_without.push_back(BFS(history.main_graph, v_main, true));
-
-        //#pragma omp parallel for num_threads(1)
-        //for (omp_index u = 0; u < static_cast<omp_index>(2); ++u){
-        //    BFS_without[u].run();
-        //}
-
-        //BFS BFSu_with = all_BFS.back(); 
-        //all_BFS.pop_back();
-        //BFS BFSv_with = all_BFS.back();
-        //all_BFS.pop_back();
 
         BFS BFSu_without = BFS(history.main_graph, u_main, true);
         BFS BFSv_without = BFS(history.main_graph, v_main, true);
@@ -724,7 +647,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         /**********/
         PageRank pagerank_without(history.main_graph);
         pagerank_without.run();
-
 
         /**********************/
         /*Connected Components*/
@@ -759,6 +681,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         double pagerank_variation = 0;
         double pagerank_max_with = 0;
         double pagerank_max_without = 0;
+        double pagerank_min_with = 10;
+        double pagerank_min_without = 10;
+
         double core_variation = 0;
         Count idx = 0;
         for (const auto n : history.main_graph.nodeRange()){
@@ -806,6 +731,9 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             pagerank_variation += std::abs(static_cast<int>(pagerank_with.score(n) - pagerank_without.score(n)));
             pagerank_max_with = (pagerank_max_with > pagerank_with.score(n))? pagerank_max_with : pagerank_with.score(n);
             pagerank_max_without = (pagerank_max_without > pagerank_without.score(n))? pagerank_max_without : pagerank_without.score(n);
+            pagerank_min_with = (pagerank_min_with < pagerank_with.score(n))? pagerank_min_with : pagerank_with.score(n);
+            pagerank_min_without = (pagerank_min_without < pagerank_without.score(n))? pagerank_min_without : pagerank_without.score(n);
+
 
           //}
 
@@ -827,13 +755,6 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         std::vector<std::vector<node>> all_components_without = components_without.getComponents();
         std::unordered_set<node> component_u_nodes_without(all_components_without[components_without.componentOfNode(u_main)].begin(), all_components_without[components_without.componentOfNode(u_main)].end());
             std::unordered_set<node> component_v_nodes_without(all_components_without[components_without.componentOfNode(v_main)].begin(), all_components_without[components_without.componentOfNode(v_main)].end());
-
-        //  Graph u_component_without = GraphTools::subgraphFromNodes(history.main_graph, component_u_nodes_without);
-        //  Graph v_component_without = GraphTools::subgraphFromNodes(history.main_graph, component_v_nodes_without);
-        //*std::max_element(dist_to_u_with.begin(), dist_to_u_with.end());
-        //std::max_element(dist_to_v_with.begin(), dist_to_v_with.end());
-        //dist_to_u_without.begin(), dist_to_u_without.end());
-        //dist_to_v_without.begin(), dist_to_v_without.end());
 
         integerResults["eccentricity u in G"] = *std::max_element(dist_to_u_with, dist_to_u_with + N);
         integerResults["eccentricity v in G"] = *std::max_element(dist_to_v_with, dist_to_v_with +N);
@@ -885,115 +806,10 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
         doubleResults["pagerank of v in G-"] = pagerank_without.score(v_main);
         doubleResults["pagerank max G"] = pagerank_max_with;
         doubleResults["pagerank max G-"] = pagerank_max_without;
+        doubleResults["pagerank min G"] = pagerank_min_with;
+        doubleResults["pagerank min G-"] = pagerank_min_without;
         doubleResults["pagerank variation"] = pagerank_variation;
 
-
-        //}
-        //if (use_nonLinear) { 
-        /**********/
-        /*PageRank*/
-        /**********/
-
-        //}
-        /*************/
-        /*PLM on proj*/
-        /*************/
-        //std::vector<PLM> plms_top;
-        //std::vector<PLM> plms_bot;
-        //std::vector<Partition> partitions_top(N_plm, Partition(0));
-        //std::vector<Count> N_changes_top(N_plm, 0);
-        //std::vector<Partition> partitions_bot(N_plm, Partition(0));
-        //std::vector<Count> N_changes_bot(N_plm, 0);
-
-        //std::vector<Count> N_subsets_bot(N_plm, 0);
-        //std::vector<Count> max_subset_size_bot(N_plm, 0);
-        //std::vector<bool> same_subset_uv_bot(N_plm, false);
-        //std::vector<Count> u_subset_size_bot(N_plm, 0);
-        //std::vector<Count> v_subset_size_bot(N_plm, 0);
-        //std::vector<Count> N_subsets_top(N_plm, 0);
-        //std::vector<Count> max_subset_size_top(N_plm, 0);
-        //std::vector<bool> same_subset_uv_top(N_plm, false);
-        //std::vector<Count> u_subset_size_top(N_plm, 0);
-        //std::vector<Count> v_subset_size_top(N_plm, 0);
-
-        //// parallelize PLM
-        //#pragma omp parallel for num_threads(1)
-        //for (omp_index omp_idx = 0; omp_idx < static_cast<omp_index>(N_plm); ++omp_idx){
-        //    //std::pair<Partition, count> estimation = estimate(partitions[u]);
-        //    //PLM plm(projection, false, 1.0, "balanced",32,true,true,partitions[u]);
-        //    // top graph
-        //    Count z_top = history.top_graph.upperNodeIdBound();
-        //    Partition zeta_top(z_top);
-        //    zeta_top.allToSingletons();
-        //    PLM plm_top(history.top_graph, false, 1.0, "none randomized",32,false,false,zeta_top);
-        //    plm_top.run();
-        //    partitions_top[omp_idx] = plm_top.getPartition();
-        //    N_changes_top[omp_idx] = plm_top.getNumberChanges();
-
-
-        //    Partition partition_top = plm_top.getPartition();
-        //    partitions_top[omp_idx] = partition_top;
-        //    N_subsets_top[omp_idx] = partition_top.numberOfSubsets();
-        //    std::vector<Count> subset_sizes_top = partition_top.subsetSizes(); 
-        //    max_subset_size_top[omp_idx] = *std::max_element(subset_sizes_top.begin(), subset_sizes_top.end());
-        //    same_subset_uv_top[omp_idx] = partition_top.inSameSubset(u_main, v_main);
-        //    index u_subset_top = partition_top.subsetOf(u_main);
-        //    index v_subset_top = partition_top.subsetOf(v_main);
-        //    u_subset_size_top[omp_idx] = partition_top.subsetSizeMap()[u_subset_top];
-        //    v_subset_size_top[omp_idx] = partition_top.subsetSizeMap()[v_subset_top];
-        //    N_changes_top[omp_idx] = plm_top.getNumberChanges();
-
-        //    // bot graph
-        //    Count z_bot = history.bot_graph.upperNodeIdBound();
-        //    Partition zeta_bot(z_bot);
-        //    zeta_bot.allToSingletons();
-        //    PLM plm_bot(history.bot_graph, false, 1.0, "none randomized",32,false,false,zeta_bot);
-        //    plm_bot.run();
-        //    partitions_bot[omp_idx] = plm_bot.getPartition();
-        //    N_changes_bot[omp_idx] = plm_bot.getNumberChanges();
-
-
-        //    Partition partition_bot = plm_bot.getPartition();
-        //    partitions_bot[omp_idx] = partition_bot;
-        //    N_subsets_bot[omp_idx] = partition_bot.numberOfSubsets();
-        //    std::vector<Count> subset_sizes_bot = partition_bot.subsetSizes(); 
-        //    max_subset_size_bot[omp_idx] = *std::max_element(subset_sizes_bot.begin(), subset_sizes_bot.end());
-        //    same_subset_uv_bot[omp_idx] = partition_bot.inSameSubset(u_main, v_main);
-        //    index u_subset_bot = partition_bot.subsetOf(u_main);
-        //    index v_subset_bot = partition_bot.subsetOf(v_main);
-        //    u_subset_size_bot[omp_idx] = partition_bot.subsetSizeMap()[u_subset_bot];
-        //    v_subset_size_bot[omp_idx] = partition_bot.subsetSizeMap()[v_subset_bot];
-        //    N_changes_bot[omp_idx] = plm_bot.getNumberChanges();
-
-        //}
-        ////// sort partitions according to the number of subsets and output features
-        ////// using this order
-        //std::vector<index> sorting_indexes_top(N_plm, 0);
-        //std::iota(sorting_indexes_top.begin(), sorting_indexes_top.end(), 0);
-        //sort(sorting_indexes_top.begin(),
-        //     sorting_indexes_top.end(),
-        //     [&](int i,int j){return N_subsets_top[i]<N_subsets_top[j];});
-        //std::vector<index> sorting_indexes_bot(N_plm, 0);
-        //std::iota(sorting_indexes_bot.begin(), sorting_indexes_top.end(), 0);
-        //sort(sorting_indexes_bot.begin(),
-        //     sorting_indexes_bot.end(),
-        //     [&](int i,int j){return N_subsets_bot[i]<N_subsets_bot[j];});
-
-        //for (size_t idx=0; idx < sorting_indexes_top.size(); ++idx) {
-        //    integerResults["number of subsets in top graph" + std::to_string(idx)] = N_subsets_top[sorting_indexes_top[idx]];
-        //    integerResults["max subset size in top graph" + std::to_string(idx)] = max_subset_size_top[sorting_indexes_top[idx]];
-        //    integerResults["u subset size in top graph" + std::to_string(idx)] = u_subset_size_top[sorting_indexes_top[idx]];
-        //    integerResults["v  subset size in top graph" + std::to_string(idx)] = v_subset_size_top[sorting_indexes_top[idx]];
-        //    integerResults["u v in same community in top graph"+ std::to_string(idx)] = same_subset_uv_top[sorting_indexes_top[idx]];
-
-        //    integerResults["number of subsets in bot graph" + std::to_string(idx)] = N_subsets_bot[sorting_indexes_bot[idx]];
-        //    integerResults["max subset size in bot graph" + std::to_string(idx)] = max_subset_size_bot[sorting_indexes_bot[idx]];
-        //    integerResults["u subset size in bot graph" + std::to_string(idx)] = u_subset_size_bot[sorting_indexes_bot[idx]];
-        //    integerResults["v  subset size in bot graph" + std::to_string(idx)] = v_subset_size_bot[sorting_indexes_bot[idx]];
-        //    integerResults["u v in same community in bot graph"+ std::to_string(idx)] = same_subset_uv_bot[sorting_indexes_bot[idx]];
-
-        //}
- 
         /***********/
         /*PLM on G-*/
         /***********/
@@ -1122,10 +938,17 @@ std::string Metrics::run(const node u,const node v, const int interaction_id) {
             integerResults["u v in same community in G "+ std::to_string(idx)] = same_subset_uv_without[sorting_indexes_with[idx]];
             integerResults["number of nodes changing partition " + std::to_string(idx)] = N_nodes_same_subset[sorting_indexes_with[idx]]; 
         }
-        std::clock_t endcputime_Onm = std::clock();
-        double dur_Onm = (endcputime_Onm - startcputime_Onm) / (double)CLOCKS_PER_SEC; // time in seconds
-        doubleResults["non linear duration"] = dur_Onm;
+        //std::clock_t endcputime_Onm = std::clock();
+        auto t_end = std::chrono::high_resolution_clock::now();
 
+        double clock_Onm = std::chrono::duration<double, std::micro>(t_end-t_start).count();
+        //double dur_Onm = (endcputime_Onm - startcputime_Onm) / (double)CLOCKS_PER_SEC; // time in seconds
+        int tcpustop =  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &Onm_stop);
+        double elapsed_Onm_cpu_time = (Onm_stop.tv_sec - Onm_start.tv_sec) + (Onm_stop.tv_nsec - Onm_start.tv_nsec)/1000.0;
+
+
+        doubleResults["non linear duration"] = elapsed_Onm_cpu_time;
+        doubleResults["non linear wall clock"] =  clock_Onm;
     }
     //std::ofstream myfile;
     Bound window = history.getWindow();
